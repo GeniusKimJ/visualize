@@ -161,11 +161,19 @@ details[open] summary { margin-bottom: 12px; }
   <section class="panel">
     <h2>1. 입력</h2>
     <div id="appTip" class="notice" hidden style="display:grid;gap:8px">
-      <span>Claude 안드로이드 앱 화면에서는 사진 선택이 막혀 있습니다. 이미지를 넣으려면 <b>Chrome이나 삼성 인터넷에서 이 페이지를</b> 여세요. (claude.ai 로그인 필요, 요금제 사용량은 똑같이 차감)</span>
+      <span>Claude 앱 화면에서는 휴대폰 사진첩이 열리지 않습니다. 갤러리에서 사진을 <b>공유 → Drive</b>로 올린 뒤 아래 <b>Google Drive에서 가져오기</b>를 누르세요. 또는 Chrome에서 이 페이지를 열면 사진첩을 바로 쓸 수 있습니다.</span>
       <code style="word-break:break-all;user-select:all">https://claude.ai/artifact/6QxyUHJd126kgQJ5GSxPHY</code>
       <button type="button" class="ghost" id="copyLink">링크 복사</button>
     </div>
     <div id="pickArea" style="display:grid;gap:8px">
+      <button type="button" id="driveBtn" class="ghost" hidden>Google Drive에서 가져오기</button>
+      <div id="drivePanel" class="item" hidden>
+        <div style="display:flex;gap:8px">
+          <input id="driveQuery" type="text" placeholder="파일 이름으로 찾기 (비우면 최근 사진)" style="flex:1;min-width:0">
+          <button type="button" id="driveSearch" style="flex:0 0 auto">찾기</button>
+        </div>
+        <div id="driveList" style="display:grid;gap:6px"></div>
+      </div>
       <label class="pick">＋ 원본 이미지 추가
         <input id="pick" type="file" accept="image/*" multiple aria-label="원본 이미지 추가">
       </label>
@@ -415,7 +423,8 @@ function revisePrompt(card, post, review) {
 var DEFAULTS = { tier: 'complex', wmText: 'KKD', wmOpacity: '6', wmEnabled: true, postType: 'A', ratio: '5:5', length: '2000' };
 var settings = Object.assign({}, DEFAULTS);
 var state = { images: [], memo: '', card: null, post: null, review: null };
-var sample = null, downloads = null, imgMax = 0, imgTypes = [], busy = false, ctl = null;
+var sample = null, downloads = null, mcp = null, imgMax = 0, imgTypes = [], busy = false, ctl = null;
+var DRIVE = 'Google Drive';
 
 function load() {
   try { Object.assign(settings, JSON.parse(localStorage.getItem('kkd-settings') || '{}')); } catch (e) {}
@@ -656,6 +665,74 @@ function addImages(list) {
   else if (full) status('이미지는 한 번에 ' + imgMax + '장까지 보낼 수 있습니다.', '');
   else status('이미지 ' + state.images.length + '장을 넣었습니다.', 'ok');
 }
+// ---------- Google Drive에서 사진 가져오기 (뷰어의 Drive 커넥터) ----------
+function driveErr(e) {
+  switch (e && e.code) {
+    case 'server_not_connected': return 'Google Drive가 연결돼 있지 않습니다. claude.ai 설정 → 커넥터에서 Google Drive를 추가해 주세요.';
+    case 'needs_reauth': return 'Google Drive 연결이 만료됐습니다. claude.ai 설정 → 커넥터에서 다시 연결해 주세요.';
+    case 'not_in_manifest': case 'approval_required': return '이 페이지가 Google Drive를 쓰도록 허용되지 않았습니다. 다시 눌러 허용해 주세요.';
+    case 'selection_required': return 'Google Drive 계정이 여러 개입니다. 화면의 안내에서 쓸 계정을 골라 주세요.';
+    case 'blocked_by_policy': return '조직 정책으로 Google Drive 사용이 막혀 있습니다.';
+    case 'server_unavailable': return 'Google Drive가 응답하지 않습니다. 잠시 후 다시 시도해 주세요.';
+    default: return 'Google Drive에서 가져오지 못했습니다. (' + ((e && e.code) || e) + ')';
+  }
+}
+async function driveSearch() {
+  var q = $('driveQuery').value.trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  var query = "mimeType contains 'image/'" + (q ? " and title contains '" + q + "'" : '');
+  $('driveList').innerHTML = '<p class="hint">Drive에서 찾는 중…</p>';
+  try {
+    var r = await mcp.callTool(DRIVE, 'search_files', { query: query, pageSize: 15, excludeContentSnippets: true }, { cache: false });
+    var files = ((r.payload && r.payload.files) || []).filter(function (f) { return OK_TYPES.indexOf(f.mimeType) !== -1; });
+    $('driveList').innerHTML = files.length ? files.map(function (f) {
+      var d = new Date(f.modifiedTime || f.createdTime || 0);
+      var when = isNaN(d) ? '' : (d.getMonth() + 1) + '/' + d.getDate() + ' ';
+      return '<button type="button" class="chip" data-drive="' + esc(f.id) + '" data-mime="' + esc(f.mimeType) + '" data-name="' + esc(f.title || 'image') + '">' + esc(when + (f.title || '(이름 없음)')) + '</button>';
+    }).join('') : '<p class="hint">사진이 없습니다. 갤러리에서 공유 → Drive로 먼저 올려 주세요.</p>';
+  } catch (e) {
+    $('driveList').innerHTML = '<p class="hint">' + esc(driveErr(e)) + '</p>';
+  }
+}
+// 다운로드 결과에서 base64 본문을 찾음 (이미지 블록 → 리소스 블록 → 가장 긴 base64 문자열)
+function findBase64(res) {
+  var blocks = (res && res.content) || [];
+  for (var i = 0; i < blocks.length; i++) {
+    var b = blocks[i];
+    if (b && b.type === 'image' && typeof b.data === 'string') return b.data;
+    if (b && b.type === 'resource' && b.resource && typeof b.resource.blob === 'string') return b.resource.blob;
+  }
+  var best = '';
+  (function walk(v, depth) {
+    if (v == null || depth > 6) return;
+    if (typeof v === 'string') {
+      var s = v.replace(/^data:[^,]*,/, '').replace(/\s+/g, '');
+      if (s.length > best.length && s.length > 200 && /^[A-Za-z0-9+/_=-]+$/.test(s)) best = s;
+      return;
+    }
+    if (typeof v === 'object') for (var k in v) walk(v[k], depth + 1);
+  })([res && res.payload, res && res.structuredContent, blocks], 0);
+  return best;
+}
+async function driveFetch(btn) {
+  if (busy) return;
+  if (state.images.length >= imgMax) { status('이미지는 한 번에 ' + imgMax + '장까지 보낼 수 있습니다.', ''); return; }
+  var id = btn.getAttribute('data-drive'), mime = btn.getAttribute('data-mime'), name = btn.getAttribute('data-name');
+  btn.disabled = true;
+  status('Drive에서 ‘' + name + '’ 받는 중', '', false);
+  try {
+    var res = await mcp.callTool(DRIVE, 'download_file_content', { fileId: id }, { cache: false });
+    var b64 = findBase64(res).replace(/-/g, '+').replace(/_/g, '/');
+    if (!b64) throw { code: 'no_content' };
+    var bin = atob(b64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    addImages([new File([bytes], name, { type: mime })]);
+  } catch (e) {
+    status(e && e.code === 'no_content' ? '파일 내용을 읽지 못했습니다. 다른 사진으로 시도해 주세요.' : (e instanceof Error ? '사진 파일을 풀지 못했습니다.' : driveErr(e)), 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function renderThumbs() {
   var t = $('thumbs');
   t.hidden = !state.images.length;
@@ -741,6 +818,17 @@ function bind() {
     if (t) { $('postTitle').value = t; syncPost(); saveDraft(); }
   });
   $('stop').addEventListener('click', function () { if (ctl) ctl.abort(); });
+  $('driveBtn').addEventListener('click', function () {
+    var p = $('drivePanel');
+    p.hidden = !p.hidden;
+    if (!p.hidden) driveSearch();
+  });
+  $('driveSearch').addEventListener('click', driveSearch);
+  $('driveQuery').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); driveSearch(); } });
+  $('driveList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-drive]');
+    if (b && !b.disabled) driveFetch(b);
+  });
   $('copyLink').addEventListener('click', function () {
     var url = 'https://claude.ai/artifact/6QxyUHJd126kgQJ5GSxPHY';
     try { navigator.clipboard.writeText(url).then(function () { status('링크를 복사했습니다. Chrome 주소창에 붙여 넣으세요.', 'ok'); }, function () { status('위 주소를 길게 눌러 복사하세요.', ''); }); }
@@ -806,6 +894,8 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitCard);
   if (!window.claude || !window.claude.use) { $('unavailable').hidden = false; return; }
   try { sample = await window.claude.use('sample'); } catch (e) { sample = null; }
   try { downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; }
+  try { mcp = await window.claude.use('mcp'); } catch (e) { mcp = null; }
+  $('driveBtn').hidden = !mcp;
   if (!sample) { $('unavailable').hidden = false; }
   else {
     try { var lim = await sample.limits(); imgMax = lim && lim.images ? lim.images.maxCount : 0; } catch (e) { imgMax = 0; }
