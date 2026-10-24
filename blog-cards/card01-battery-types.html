@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>전지의 3가지 분류</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1E2A3A; --blue:#2563EB; --sub:#6B7686; --line:#DCE2EA; --tint:#F3F6FA; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#fff; font-family:'Noto Sans KR',sans-serif; color:var(--ink); }
+  .card { position:relative; width:900px; padding:56px 56px 44px; background:#fff; }
+  .tag { display:inline-block; font-size:17px; font-weight:700; color:var(--blue);
+         border:1.5px solid var(--blue); border-radius:999px; padding:5px 16px; letter-spacing:.5px; }
+  h1 { font-size:46px; font-weight:900; letter-spacing:-1.5px; margin:0 0 10px; line-height:1.25; }
+  h1 em { font-style:normal; color:var(--blue); }
+  .lead { font-size:20px; color:var(--sub); line-height:1.6; }
+  .lead b { color:var(--ink); }
+  .rows { margin-top:34px; border-top:2px solid var(--ink); }
+  .row { display:grid; grid-template-columns:220px 1fr; gap:32px; padding:30px 0; border-bottom:1px solid var(--line); align-items:center; }
+  .fig { background:var(--tint); border-radius:14px; height:190px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+  .fig span { font-size:14px; color:var(--sub); }
+  .num { font-size:15px; font-weight:700; color:var(--blue); letter-spacing:1px; }
+  h2 { font-size:30px; font-weight:900; letter-spacing:-.8px; margin:2px 0 4px; }
+  h2 small { font-size:18px; font-weight:500; color:var(--sub); letter-spacing:0; margin-left:6px; }
+  .key { font-size:19px; font-weight:700; margin-bottom:12px; }
+  .key mark { background:none; color:var(--blue); }
+  ul { list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:6px 18px; font-size:17px; line-height:1.5; }
+  li::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--blue); margin:0 9px 3px 0; }
+  .ex { margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; }
+  .ex span { font-size:15px; padding:4px 12px; border:1px solid var(--line); border-radius:8px; color:var(--sub); }
+  .ex span b { color:var(--ink); font-weight:500; }
+  .note { font-size:14px; color:var(--sub); margin-top:8px; }
+  .sum { margin-top:30px; display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .sum div { padding:18px 20px; font-size:16px; line-height:1.55; border-right:1px solid var(--line); }
+  .sum div:last-child { border-right:none; }
+  .sum b { display:block; font-size:15px; color:var(--blue); margin-bottom:4px; }
+  .bms { margin-top:18px; background:var(--ink); color:#fff; border-radius:14px; padding:20px 24px; font-size:18px; line-height:1.6; }
+  .bms b { color:#8FB4FF; }
+  .foot { margin-top:22px; display:flex; justify-content:space-between; font-size:14px; color:var(--sub); }
+  /* 사선 워터마크: KKD, 투명도 6% (difference 블렌드로 밝은/어두운 배경 모두 보임) */
+  .wm { position:absolute; inset:0; pointer-events:none; z-index:10; opacity:.06; mix-blend-mode:difference;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='130'%3E%3Cg font-family='Noto Sans KR,sans-serif' font-weight='900' font-size='20' fill='%23FFFFFF'%3E%3Ctext x='20' y='40' transform='rotate(-30 40 34)'%3EKKD%3C/text%3E%3Ctext x='100' y='105' transform='rotate(-30 120 99)'%3EKKD%3C/text%3E%3C/g%3E%3C/svg%3E");
+        background-repeat:repeat; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <h1>전지(Battery)의 <em>3가지 분류</em></h1>
+  <p class="lead">기준은 하나, <b>"에너지를 어디서 얻고, 다시 채울 수 있는가"</b> 입니다.</p>
+
+  <div class="rows">
+    <!-- 1차 -->
+    <div class="row">
+      <div class="fig">
+        <svg width="70" height="130" viewBox="0 0 70 130" fill="none" stroke="#1E2A3A" stroke-width="2.5">
+          <rect x="27" y="4" width="16" height="8" rx="2"/>
+          <rect x="10" y="12" width="50" height="112" rx="8"/>
+          <line x1="10" y1="42" x2="60" y2="42"/>
+          <path d="M35 22v12M29 28h12" stroke="#2563EB"/>
+          <path d="M29 104h12" stroke="#2563EB"/>
+        </svg>
+        <span>AA 건전지</span>
+      </div>
+      <div>
+        <div class="num">TYPE 1</div>
+        <h2>1차 전지<small>Primary Cell</small></h2>
+        <p class="key">한 번 쓰고 끝 — <mark>단방향 화학 반응</mark></p>
+        <ul><li>충전 불가, 일회용</li><li>저렴한 가격</li><li>장기 보관에 유리</li><li>다 쓰면 교체</li></ul>
+        <div class="ex"><span><b>종류</b> 알칼리 · 망간 · 리튬 1차</span><span><b>용도</b> 리모컨 · 시계</span></div>
+      </div>
+    </div>
+
+    <!-- 2차 -->
+    <div class="row">
+      <div class="fig">
+        <svg width="170" height="120" viewBox="0 0 170 120" fill="none" stroke="#1E2A3A" stroke-width="2.5">
+          <rect x="10" y="20" width="150" height="90" rx="6"/>
+          <rect x="22" y="32" width="22" height="66" fill="#E3EAF6"/>
+          <rect x="126" y="32" width="22" height="66" fill="#E3EAF6"/>
+          <line x1="85" y1="28" x2="85" y2="102" stroke-dasharray="5 4"/>
+          <path d="M56 58h58M106 51l8 7-8 7" stroke="#2563EB"/>
+          <path d="M114 74H56M64 67l-8 7 8 7" stroke="#2563EB"/>
+          <path d="M27 10h12M33 4v12M131 10h12" stroke-width="2"/>
+        </svg>
+        <span>양극 · 분리막 · 음극</span>
+      </div>
+      <div>
+        <div class="num">TYPE 2</div>
+        <h2>2차 전지<small>Secondary Cell</small></h2>
+        <p class="key">충전해서 또 쓴다 — <mark>양방향 가역 반응</mark></p>
+        <ul><li>반복 충·방전 가능</li><li>충전 상태 관리 필요(BMS)</li><li>장기 사용 시 경제적</li><li>쓸수록 서서히 노화</li></ul>
+        <div class="ex"><span><b>종류</b> 리튬이온 · 니켈수소 · 납축</span><span><b>용도</b> 스마트폰 · 전기차 · ESS</span></div>
+      </div>
+    </div>
+
+    <!-- 연료전지 -->
+    <div class="row">
+      <div class="fig">
+        <svg width="180" height="120" viewBox="0 0 180 120" fill="none" stroke="#1E2A3A" stroke-width="2.5">
+          <rect x="45" y="20" width="90" height="80" rx="6"/>
+          <rect x="84" y="20" width="12" height="80" fill="#E3EAF6"/>
+          <path d="M4 45h36M32 38l8 7-8 7" stroke="#2563EB"/>
+          <path d="M176 45h-36M148 38l-8 7 8 7" stroke="#2563EB"/>
+          <path d="M140 80h32M164 73l8 7-8 7"/>
+          <text x="8" y="34" font-size="15" fill="#1E2A3A" stroke="none" font-family="Noto Sans KR" font-weight="700">H₂</text>
+          <text x="148" y="34" font-size="15" fill="#1E2A3A" stroke="none" font-family="Noto Sans KR" font-weight="700">O₂</text>
+          <text x="140" y="112" font-size="15" fill="#1E2A3A" stroke="none" font-family="Noto Sans KR" font-weight="700">H₂O</text>
+          <path d="M70 20V8h40v12" stroke-width="2"/>
+          <path d="M92 2l-5 7h6l-5 7" stroke="#2563EB" stroke-width="2"/>
+        </svg>
+        <span>수소 + 산소 → 전기 + 물</span>
+      </div>
+      <div>
+        <div class="num">TYPE 3</div>
+        <h2>연료전지<small>Fuel Cell</small></h2>
+        <p class="key">연료를 넣는 동안 계속 — <mark>외부 연료로 발전</mark></p>
+        <ul><li>연료 공급 시 지속 발전</li><li>배출물이 물(수소 연료 시)</li><li>저장장치가 아닌 발전장치</li><li>연료 탱크·공급 계통 필요</li></ul>
+        <div class="ex"><span><b>종류</b> 수소 연료전지</span><span><b>용도</b> 수소차 · 발전소</span></div>
+        <p class="note">※ 흔히 '3차 전지'로 부르지만 학술적 공식 분류명은 아닙니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sum">
+    <div><b>1차 전지</b>안에 든 에너지를<br>한 번 쓰고 끝</div>
+    <div><b>2차 전지</b>안에 담고, 쓰고,<br>다시 채운다</div>
+    <div><b>연료전지</b>밖에서 넣는 연료로<br>그때그때 만든다</div>
+  </div>
+
+  <div class="bms"><b>BMS 엔지니어의 한 줄</b><br>충·방전을 반복하는 2차 전지는 과충전·과방전 보호가 필수 — 그래서 BMS가 필요합니다.</div>
+
+  <div class="wm"></div>
+  <div class="foot"><span></span><span>#1차전지 #2차전지 #연료전지</span></div>
+</div>
+</body>
+</html>
