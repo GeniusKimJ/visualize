@@ -1,0 +1,60 @@
+name: KKD 블로그 카드 APK
+
+on:
+  push:
+    paths:
+      - 'kkd-blog-app/**'
+      - '.github/workflows/kkd-blog-app.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 웹 UI 번들
+        working-directory: kkd-blog-app/web
+        run: npm ci && npm run build
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: APK 빌드
+        working-directory: kkd-blog-app/android
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: APK 이름 정리
+        run: cp kkd-blog-app/android/app/build/outputs/apk/release/app-release.apk KKDBlogCard.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KKDBlogCard-apk
+          path: KKDBlogCard.apk
+
+      - name: 릴리스에 APK 올리기 (휴대폰에서 바로 다운로드)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: kkd-blog-app-v${{ github.run_number }}
+          name: KKD 블로그 카드 v1.0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            안드로이드 휴대폰에서 아래 KKDBlogCard.apk 를 눌러 내려받아 설치하세요.
+            (처음 설치할 때 "출처를 알 수 없는 앱 설치"를 허용해야 합니다.)
+          files: KKDBlogCard.apk
+          make_latest: true

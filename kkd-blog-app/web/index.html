@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KKD 블로그 카드</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>KKD 블로그 카드</h1>
+  <p>이미지·메모 → 지식카드 · 원고 · 검수</p>
+</header>
+
+<main>
+  <details id="settings" class="panel">
+    <summary>설정</summary>
+    <label>Anthropic API 키
+      <div class="row"><input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-..."><button id="toggleKey" type="button" class="ghost fit">보기</button></div>
+    </label>
+    <p id="keyHint" class="hint">API 키는 console.anthropic.com → API Keys에서 만듭니다. 키는 이 휴대폰에만 저장됩니다.</p>
+    <label>모델
+      <select id="model">
+        <option value="claude-opus-5-5">Claude Opus 5.5 (기본, 가장 정확)</option>
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (더 빠르고 저렴)</option>
+      </select>
+    </label>
+    <div class="grid">
+      <label>워터마크 문구<input id="wmText" type="text" maxlength="20"></label>
+      <label>워터마크 농도(%)<input id="wmOpacity" type="number" min="0" max="30" step="1"></label>
+    </div>
+    <label class="check"><input id="wmEnabled" type="checkbox"> 사선 워터마크 넣기</label>
+    <button id="saveSettings" type="button">설정 저장</button>
+  </details>
+
+  <section class="panel">
+    <h2>1. 입력</h2>
+    <label class="pick">
+      <input id="pick" type="file" accept="image/*" multiple>
+      <span>＋ 원본 이미지 추가</span>
+    </label>
+    <div id="thumbs" class="thumbs"></div>
+    <label>메모 · 주제 · 강조할 내용
+      <textarea id="memo" rows="5" placeholder="예) 전지의 3가지 분류. 3차 전지라는 표현은 정확하지 않다는 점 짚어줘."></textarea>
+    </label>
+    <div class="grid3">
+      <label>글 유형
+        <select id="postType">
+          <option value="A">A 개념 설명</option>
+          <option value="B">B 트러블슈팅</option>
+          <option value="C">C 코드 튜토리얼</option>
+          <option value="D">D 산업·트렌드</option>
+        </select>
+      </label>
+      <label>실무:일반
+        <select id="ratio">
+          <option>5:5</option><option>7:3</option><option>3:7</option><option>8:2</option>
+        </select>
+      </label>
+      <label>분량(자)<input id="length" type="number" min="800" max="5000" step="100"></label>
+    </div>
+    <button data-act="all" class="primary">한 번에 만들기 (카드 → 원고 → 검수)</button>
+    <div class="row steps">
+      <button data-act="card" class="ghost">카드만</button>
+      <button data-act="post" class="ghost">원고만</button>
+      <button data-act="review" class="ghost">검수만</button>
+    </div>
+    <div id="progress" class="progress" hidden></div>
+  </section>
+
+  <section id="cardSec" class="panel" hidden>
+    <h2>2. 지식카드</h2>
+    <div id="cardWrap" class="cardwrap"><iframe id="cardFrame" title="카드 미리보기" sandbox="allow-same-origin"></iframe></div>
+    <div id="corrections" class="corrections"></div>
+    <div class="row">
+      <button data-act="save">갤러리에 저장</button>
+      <button data-act="card" class="ghost">다시 만들기</button>
+    </div>
+  </section>
+
+  <section id="postSec" class="panel" hidden>
+    <h2>3. 블로그 원고</h2>
+    <label>제목<input id="postTitle" type="text"></label>
+    <div id="titleChips" class="chips"></div>
+    <p id="keywords" class="hint"></p>
+    <textarea id="postBody" rows="18"></textarea>
+    <p id="charCount" class="hint"></p>
+    <p class="hint">실무자 섹션에 본인 경험을 한 문단 직접 넣으면 글의 신뢰도가 크게 올라갑니다.</p>
+    <div class="row">
+      <button data-act="copy">원고 복사</button>
+      <button data-act="post" class="ghost">다시 쓰기</button>
+    </div>
+  </section>
+
+  <section id="reviewSec" class="panel" hidden>
+    <h2>4. 발행 전 검수</h2>
+    <div id="reviewBody" class="review"></div>
+    <div class="row">
+      <button id="btnRevise" data-act="revise">지적 사항 반영해서 고치기</button>
+      <button data-act="review" class="ghost">다시 검수</button>
+    </div>
+  </section>
+
+  <section class="panel final">
+    <button data-act="share" class="primary">네이버 블로그로 보내기</button>
+    <p class="hint">카드 이미지를 블로그 앱으로 보내고 원고는 클립보드에 복사합니다. 에디터에서 길게 눌러 붙여 넣으세요.</p>
+    <button data-act="reset" class="ghost">새 글 시작</button>
+  </section>
+</main>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
