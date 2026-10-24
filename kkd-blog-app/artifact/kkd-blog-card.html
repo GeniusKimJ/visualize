@@ -155,6 +155,11 @@ details[open] summary { margin-bottom: 12px; }
       <label>워터마크 농도(%)<input id="wmOpacity" type="number" min="0" max="30" step="1"></label>
     </div>
     <label class="check"><input id="wmEnabled" type="checkbox"> 사선 워터마크 넣기</label>
+    <label>이미 올린 글 제목 (한 줄에 하나, 중복 검사에 사용)
+      <textarea id="pastPosts" rows="4" placeholder="예) 1차 전지 2차 전지 차이, 연료전지까지 한 장으로 정리"></textarea>
+    </label>
+    <p class="hint" id="topicCount"></p>
+    <button type="button" class="ghost" id="clearTopics">주제 기록 지우기</button>
     <p class="hint">Claude 호출은 지금 쓰는 Claude 요금제 사용량으로 처리됩니다. 별도 API 키나 추가 결제가 없습니다.</p>
   </details>
 
@@ -217,6 +222,7 @@ details[open] summary { margin-bottom: 12px; }
   <section id="cardSec" class="panel" hidden>
     <h2>2. 지식카드</h2>
     <div id="cardBox" class="cardbox"><div id="cardScale" class="cardscale"><div id="cardNode" class="kc"></div></div></div>
+    <div id="dupBox"></div>
     <div id="corrections"></div>
     <div class="btns">
       <button data-act="save">PNG로 저장</button>
@@ -400,10 +406,67 @@ D. 산업·트렌드 해설형: 사용자 자료 범위에서만 사실을 쓰�
 var TYPE_LABEL = { A: 'A. 개념 설명형', B: 'B. 트러블슈팅 경험담형', C: 'C. 코드·레지스터 튜토리얼형', D: 'D. 산업·트렌드 해설형' };
 var CATS = ['기술 오류·근거 부족', '실무자에게 당연한 내용', '일반인이 막힐 용어', '회사·고객사 정보 노출'];
 
-function cardPrompt(memo, n) {
-  return RULES + '\n\n---\n\n[요청] ' + (n ? '첨부한 이미지 ' + n + '장(원본 카드)과 ' : '') + '아래 메모를 바탕으로 지식카드를 새로 만들어 주세요. 원본의 핵심 구성은 살리되 디자인 규칙대로 다시 그리고, 사실관계를 점검해 틀린 부분은 바로잡아 corrections에 적어 주세요.\n\n[사용자 메모]\n' + (memo || '(메모 없음 — 이미지 내용만 사용)') +
-    '\n\n[JSON 형식]\n{"title": "카드 제목(파일 이름용, 짧게)", "card_html": "카드 본문 HTML", "hashtags": ["해시태그(# 없이)", "..."], "corrections": ["원본에서 바로잡은 점", "..."]}';
+function cardPrompt(memo, n, past) {
+  return RULES + '\n\n---\n\n[요청] ' + (n ? '첨부한 이미지 ' + n + '장(원본 카드)과 ' : '') + '아래 메모를 바탕으로 지식카드를 새로 만들어 주세요. 원본의 핵심 구성은 살리되 디자인 규칙대로 다시 그리고, 사실관계를 점검해 틀린 부분은 바로잡아 corrections에 적어 주세요.\n\n[중복 검사] 카드를 만들기 전에, 이미지와 메모의 핵심 주제가 아래 [이미 다룬 주제]와 같은지 판단해 duplicate에 적어 주세요. 제목 문구가 달라도 독자가 얻는 핵심 내용이 같으면 "same", 주제는 겹치지만 관점·범위가 다르면 "overlap", 관련 없으면 "new"입니다. same·overlap이면 겹치는 주제를 그대로 인용하고, 중복을 피하는 다른 각도를 한 줄로 제안합니다. 카드는 중복 여부와 관계없이 그대로 만듭니다.\n\n[이미 다룬 주제]\n' + (past || '(없음)') + '\n\n[사용자 메모]\n' + (memo || '(메모 없음 — 이미지 내용만 사용)') +
+    '\n\n[JSON 형식]\n{"title": "카드 제목(파일 이름용, 짧게)", "card_html": "카드 본문 HTML", "hashtags": ["해시태그(# 없이)", "..."], "corrections": ["원본에서 바로잡은 점", "..."], "duplicate": {"level": "new | overlap | same", "similar_to": ["겹치는 주제 그대로"], "reason": "판단 근거 한 줄", "angle": "중복을 피하는 다른 각도 한 줄(new면 빈 문자열)"}}';
 }
+
+// ---------- 주제 기록 (중복 검사용, 이 기기에 최대 200개) ----------
+function getTopics() {
+  try { var t = JSON.parse(localStorage.getItem('kkd-topics') || '[]'); return Array.isArray(t) ? t : []; } catch (e) { return []; }
+}
+function setTopics(t) { try { localStorage.setItem('kkd-topics', JSON.stringify(t.slice(0, 200))); } catch (e) {} }
+function pastTopicsText() {
+  var lines = getTopics().map(function (t) {
+    var d = new Date(t.at);
+    return '- ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (t.postTitle || t.title) + (t.tags && t.tags.length ? ' (#' + t.tags.join(' #') + ')' : '');
+  });
+  String(settings.pastPosts || '').split('\n').forEach(function (l) { if (l.trim()) lines.push('- (블로그에 올린 글) ' + l.trim()); });
+  return lines.slice(0, 250).join('\n');
+}
+function recordTopic() {
+  var t = getTopics();
+  var id = 't' + Date.now();
+  t.unshift({ id: id, at: Date.now(), title: state.card.title, tags: state.card.hashtags, hashes: state.images.map(function (i) { return i.hash; }).filter(Boolean) });
+  setTopics(t);
+  state.card.topicId = id;
+  renderTopicCount();
+}
+function updateTopicPost() {
+  if (!state.card || !state.card.topicId || !state.post) return;
+  var t = getTopics();
+  t.forEach(function (x) { if (x.id === state.card.topicId) { x.postTitle = state.post.title; } });
+  setTopics(t);
+}
+function renderTopicCount() {
+  var n = getTopics().length;
+  $('topicCount').textContent = '중복 검사에 쓰는 주제 기록: ' + n + '개 (카드를 만들 때마다 자동 기록)';
+  $('clearTopics').hidden = !n;
+}
+
+// ---------- 사진 지문(dHash): 같은 사진인지 픽셀로 비교 ----------
+async function imageHash(file) {
+  var bmp = await createImageBitmap(file);
+  var c = document.createElement('canvas');
+  c.width = 9; c.height = 8;
+  var g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(bmp, 0, 0, 9, 8);
+  var px = g.getImageData(0, 0, 9, 8).data, bits = '';
+  for (var y = 0; y < 8; y++) for (var x = 0; x < 8; x++) {
+    var a = (y * 9 + x) * 4, b = a + 4;
+    var l1 = px[a] * 0.299 + px[a + 1] * 0.587 + px[a + 2] * 0.114;
+    var l2 = px[b] * 0.299 + px[b + 1] * 0.587 + px[b + 2] * 0.114;
+    bits += l1 > l2 ? '1' : '0';
+  }
+  return bits;
+}
+function hashDist(a, b) {
+  if (!a || !b || a.length !== b.length) return 64;
+  var d = 0;
+  for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) d++;
+  return d;
+}
+var SAME_PHOTO = 6; // 64비트 중 6개 이하 차이면 같은 사진(크기·압축만 다름)
 function postPrompt(o, card, memo) {
   return RULES + '\n\n---\n\n[요청] 아래 지식카드를 첫 이미지로 쓰는 네이버 블로그 본문을 써 주세요.\n- 글 유형: ' + (TYPE_LABEL[o.postType] || TYPE_LABEL.A) + '\n- 실무자 : 일반인 비중 = ' + o.ratio + '\n- 분량: 공백 포함 약 ' + o.length + '자\n- 제목 후보 3개(32자 이내, 숫자·질문형 혼용, 낚시성 배제)와 핵심 키워드도 주세요.\n\n[지식카드 본문 HTML]\n' + card.card_html + '\n\n[사용자 메모]\n' + (memo || '(없음)') +
     '\n\n[JSON 형식]\n{"titles": ["제목1", "제목2", "제목3"], "keywords": ["키워드", "..."], "body": "본문 전체(줄바꿈은 \\n)"}';
@@ -546,10 +609,13 @@ async function ask(label, prompt, images) {
 
 async function stepCard() {
   var files = state.images.map(function (i) { return i.file; });
-  var r = await ask('① 지식카드 만드는 중', cardPrompt(state.memo, files.length), files);
+  var r = await ask('① 지식카드 만드는 중 (중복 검사 포함)', cardPrompt(state.memo, files.length, pastTopicsText()), files);
   if (!r || typeof r.card_html !== 'string') throw { code: 'invalid_json', message: '' };
   if (state.card) archive();
-  state.card = { title: String(r.title || '지식카드'), card_html: r.card_html, hashtags: arr(r.hashtags), corrections: arr(r.corrections) };
+  var dup = r.duplicate || {};
+  state.card = { title: String(r.title || '지식카드'), card_html: r.card_html, hashtags: arr(r.hashtags), corrections: arr(r.corrections),
+    duplicate: { level: ['same', 'overlap'].indexOf(dup.level) >= 0 ? dup.level : 'new', similar: arr(dup.similar_to), reason: String(dup.reason || ''), angle: String(dup.angle || '') } };
+  recordTopic();
   saveDraft(); render();
 }
 async function stepPost() {
@@ -558,6 +624,7 @@ async function stepPost() {
   if (!r || typeof r.body !== 'string') throw { code: 'invalid_json', message: '' };
   var titles = arr(r.titles);
   state.post = { titles: titles, title: titles[0] || '', keywords: arr(r.keywords), body: r.body };
+  updateTopicPost();
   saveDraft(); render();
 }
 async function stepReview() {
@@ -650,20 +717,32 @@ function syncPost() {
   state.post.body = $('postBody').value;
 }
 var OK_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-function addImages(list) {
+async function addImages(list) {
   var files = Array.prototype.slice.call(list || []);
   if (!files.length) return;
-  var skipped = 0, full = false;
-  files.forEach(function (f) {
+  var skipped = 0, full = false, dupNow = 0, usedBefore = [];
+  var topics = getTopics();
+  for (var k = 0; k < files.length; k++) {
+    var f = files[k];
     var types = imgTypes.length ? imgTypes : OK_TYPES;
-    if (types.indexOf(f.type) === -1) { skipped++; return; }
-    if (state.images.length >= imgMax) { full = true; return; }
-    state.images.push({ file: f, url: URL.createObjectURL(f) });
-  });
+    if (types.indexOf(f.type) === -1) { skipped++; continue; }
+    if (state.images.length >= imgMax) { full = true; continue; }
+    var h = '';
+    try { h = await imageHash(f); } catch (e) { h = ''; }
+    // 이번 글에 이미 넣은 같은 사진은 빼고, 이전 글에서 쓴 사진이면 알려 줌
+    if (h && state.images.some(function (im) { return hashDist(im.hash, h) <= SAME_PHOTO; })) { dupNow++; continue; }
+    var hit = h ? topics.find(function (t) { return (t.hashes || []).some(function (x) { return hashDist(x, h) <= SAME_PHOTO; }); }) : null;
+    state.images.push({ file: f, url: URL.createObjectURL(f), hash: h, usedIn: hit ? (hit.postTitle || hit.title) : '' });
+    if (hit) usedBefore.push(hit.postTitle || hit.title);
+  }
   renderThumbs();
-  if (skipped) status('JPG·PNG·WEBP 이미지만 보낼 수 있습니다. (' + skipped + '개 제외)', 'err');
-  else if (full) status('이미지는 한 번에 ' + imgMax + '장까지 보낼 수 있습니다.', '');
-  else status('이미지 ' + state.images.length + '장을 넣었습니다.', 'ok');
+  var msg = [];
+  if (state.images.length) msg.push('이미지 ' + state.images.length + '장을 넣었습니다.');
+  if (dupNow) msg.push('이미 넣은 것과 같은 사진 ' + dupNow + '장은 뺐습니다.');
+  if (usedBefore.length) msg.push('주의: 이전에 ‘' + usedBefore[0] + '’ 글에서 쓴 사진입니다.');
+  if (skipped) msg.push('JPG·PNG·WEBP가 아닌 ' + skipped + '개는 뺐습니다.');
+  if (full) msg.push('이미지는 한 번에 ' + imgMax + '장까지입니다.');
+  status(msg.join(' '), usedBefore.length || skipped ? 'err' : 'ok');
 }
 // ---------- Google Drive에서 사진 가져오기 (뷰어의 Drive 커넥터) ----------
 function driveErr(e) {
@@ -747,6 +826,12 @@ function render() {
   if (state.card) {
     renderCardNode();
     var c = state.card.corrections || [];
+    var dp = state.card.duplicate;
+    $('dupBox').innerHTML = !dp ? '' : dp.level === 'new'
+      ? '<div class="status ok"><span>중복 검사: 이전에 다룬 주제와 겹치지 않습니다.</span></div>'
+      : '<div class="notice" style="display:grid;gap:4px"><b>' + (dp.level === 'same' ? '중복 주제입니다' : '일부 겹치는 주제입니다') + '</b>' +
+        (dp.similar.length ? '<span>겹치는 글: ' + esc(dp.similar.join(' / ')) + '</span>' : '') +
+        (dp.reason ? '<span>' + esc(dp.reason) + '</span>' : '') + (dp.angle ? '<span>다른 각도 제안: ' + esc(dp.angle) + '</span>' : '') + '</div>';
     $('corrections').innerHTML = c.length ? '<p class="hint">원본에서 바로잡은 점</p><ul class="list">' + c.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '';
   }
   $('postSec').hidden = !state.post;
@@ -779,16 +864,25 @@ function countChars() { $('charCount').textContent = '공백 포함 ' + ($('post
 function fillSettings() {
   $('tier').value = settings.tier; $('wmText').value = settings.wmText; $('wmOpacity').value = settings.wmOpacity; $('wmEnabled').checked = !!settings.wmEnabled;
   $('postType').value = settings.postType; $('ratio').value = settings.ratio; $('length').value = settings.length;
+  $('pastPosts').value = settings.pastPosts || '';
+  renderTopicCount();
 }
 function readSettings() {
   settings.tier = $('tier').value; settings.wmText = $('wmText').value.trim() || 'KKD'; settings.wmOpacity = $('wmOpacity').value || '6'; settings.wmEnabled = $('wmEnabled').checked;
   settings.postType = $('postType').value; settings.ratio = $('ratio').value; settings.length = $('length').value || '2000';
+  settings.pastPosts = $('pastPosts').value;
   saveSettings();
   if (state.card) renderCardNode();
 }
 
 function bind() {
-  ['tier', 'wmText', 'wmOpacity', 'wmEnabled', 'postType', 'ratio', 'length'].forEach(function (id) { $(id).addEventListener('change', readSettings); });
+  ['tier', 'wmText', 'wmOpacity', 'wmEnabled', 'postType', 'ratio', 'length', 'pastPosts'].forEach(function (id) { $(id).addEventListener('change', readSettings); });
+  // 두 번 눌러야 지워짐 (확인 단계)
+  $('clearTopics').addEventListener('click', function () {
+    var b = $('clearTopics');
+    if (b.dataset.armed) { setTopics([]); delete b.dataset.armed; b.textContent = '주제 기록 지우기'; renderTopicCount(); status('주제 기록을 지웠습니다.', 'ok'); }
+    else { b.dataset.armed = '1'; b.textContent = '한 번 더 누르면 지워집니다'; }
+  });
   var onPick = function (e) {
     addImages(e.target.files);
     e.target.value = '';
