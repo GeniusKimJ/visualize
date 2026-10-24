@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.kkd.blogcard'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.kkd.blogcard'
+        minSdk 29
+        targetSdk 35
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
+        versionName '1.0.' + (System.getenv('VERSION_CODE') ?: '0')
+    }
+
+    // 개인 설치용 고정 서명 키 (업데이트 설치 시 서명이 같아야 덮어쓰기 가능)
+    signingConfigs {
+        release {
+            storeFile file('kkd-blogcard.keystore')
+            storePassword 'kkdblogcard'
+            keyAlias 'kkd'
+            keyPassword 'kkdblogcard'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
