@@ -243,6 +243,13 @@ details[open] summary { margin-bottom: 12px; }
     <h2>네이버 블로그에 올리기</h2>
     <p class="hint">① PNG로 저장 → ② 원고 복사 → ③ 네이버 블로그 앱에서 새 글을 열고 원고를 붙여 넣은 뒤 [이미지: …] 자리에 저장한 카드를 넣으세요.</p>
     <button class="ghost" data-act="reset">새 글 시작</button>
+    <p class="hint">새 글을 시작해도 지금 작업은 아래 ‘이전 작업’에 보관됩니다.</p>
+  </section>
+
+  <section id="histSec" class="panel" hidden>
+    <h2>이전 작업</h2>
+    <p class="hint">새 글 시작, 카드 다시 만들기, 검수 반영 전의 작업을 이 기기에 최근 10개까지 보관합니다. (원본 이미지는 보관하지 않음)</p>
+    <div id="histList" style="display:grid;gap:8px"></div>
   </section>
 </div>
 
@@ -422,6 +429,38 @@ function saveDraft() {
   try { localStorage.setItem('kkd-draft', JSON.stringify({ memo: state.memo, card: state.card, post: state.post, review: state.review })); } catch (e) {}
 }
 
+// ---------- 이전 작업 보관 (덮어쓰기 전 자동 보관, 최근 10개) ----------
+function getHistory() {
+  try { var h = JSON.parse(localStorage.getItem('kkd-history') || '[]'); return Array.isArray(h) ? h : []; } catch (e) { return []; }
+}
+function setHistory(h) {
+  // 저장 공간이 모자라면 오래된 것부터 줄여가며 저장
+  while (h.length) {
+    try { localStorage.setItem('kkd-history', JSON.stringify(h)); return; } catch (e) { h.pop(); }
+  }
+  try { localStorage.removeItem('kkd-history'); } catch (e) {}
+}
+function hasContent() { return !!(state.card || state.post || (state.memo && state.memo.trim())); }
+function archive() {
+  if (!hasContent()) return;
+  syncPost();
+  var title = (state.post && state.post.title) || (state.card && state.card.title) || state.memo.trim().slice(0, 30) || '제목 없음';
+  var h = getHistory();
+  h.unshift({ savedAt: Date.now(), title: title, memo: state.memo, card: state.card, post: state.post, review: state.review });
+  setHistory(h.slice(0, 10));
+}
+function renderHistory() {
+  var h = getHistory();
+  $('histSec').hidden = !h.length;
+  $('histList').innerHTML = h.map(function (e, i) {
+    var d = new Date(e.savedAt);
+    var when = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    var parts = [e.card ? '카드' : '', e.post ? '원고' : '', e.review ? '검수' : ''].filter(Boolean).join('·') || '메모';
+    return '<div class="item"><span class="loc counts">' + when + ' · ' + parts + '</span><span>' + esc(e.title) + '</span>' +
+      '<div class="btns"><button type="button" data-restore="' + i + '">불러오기</button><button type="button" class="ghost" data-del="' + i + '">삭제</button></div></div>';
+  }).join('');
+}
+
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -500,6 +539,7 @@ async function stepCard() {
   var files = state.images.map(function (i) { return i.file; });
   var r = await ask('① 지식카드 만드는 중', cardPrompt(state.memo, files.length), files);
   if (!r || typeof r.card_html !== 'string') throw { code: 'invalid_json', message: '' };
+  if (state.card) archive();
   state.card = { title: String(r.title || '지식카드'), card_html: r.card_html, hashtags: arr(r.hashtags), corrections: arr(r.corrections) };
   saveDraft(); render();
 }
@@ -526,6 +566,7 @@ async function stepRevise() {
   syncPost();
   var r = await ask('④ 검수 지적 반영 중', revisePrompt(state.card, state.post, state.review));
   if (!r || typeof r.card_html !== 'string' || typeof r.body !== 'string') throw { code: 'invalid_json', message: '' };
+  archive();
   state.card = { title: state.card.title, card_html: r.card_html, hashtags: arr(r.hashtags), corrections: state.card.corrections.concat(arr(r.changes)) };
   state.post.title = String(r.title || state.post.title);
   state.post.body = r.body;
@@ -623,6 +664,7 @@ function renderThumbs() {
 }
 function render() {
   renderThumbs();
+  renderHistory();
   $('memo').value = state.memo;
   $('cardSec').hidden = !state.card;
   if (state.card) {
@@ -722,11 +764,35 @@ function bind() {
     copy: copyPost,
     reset: function () {
       if (busy) return;
+      var had = hasContent();
+      archive();
       state.images.forEach(function (im) { URL.revokeObjectURL(im.url); });
       state = { images: [], memo: '', card: null, post: null, review: null };
-      saveDraft(); $('status').hidden = true; render(); window.scrollTo(0, 0);
+      saveDraft(); render(); window.scrollTo(0, 0);
+      if (had) status('이전 작업을 맨 아래 ‘이전 작업’에 보관했습니다.', 'ok'); else $('status').hidden = true;
     },
   };
+  $('histList').addEventListener('click', function (e) {
+    if (busy) return;
+    var b = e.target.closest('button');
+    if (!b) return;
+    var h = getHistory();
+    if (b.hasAttribute('data-del')) {
+      h.splice(Number(b.getAttribute('data-del')), 1);
+      setHistory(h); renderHistory();
+      return;
+    }
+    var i = Number(b.getAttribute('data-restore'));
+    var entry = h[i];
+    if (!entry) return;
+    h.splice(i, 1);
+    setHistory(h);
+    archive(); // 지금 화면의 작업도 잃지 않게 보관
+    state.images.forEach(function (im) { URL.revokeObjectURL(im.url); });
+    state = { images: [], memo: entry.memo || '', card: entry.card || null, post: entry.post || null, review: entry.review || null };
+    saveDraft(); render(); window.scrollTo(0, 0);
+    status('‘' + entry.title + '’ 작업을 불러왔습니다.', 'ok');
+  });
   document.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-act]');
     if (b && !b.disabled && acts[b.dataset.act]) acts[b.dataset.act]();
