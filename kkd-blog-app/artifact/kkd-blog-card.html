@@ -46,8 +46,13 @@ button { font: inherit; font-size: 15px; font-weight: 700; padding: 12px 14px; b
 button.ghost { background: transparent; color: var(--accent); }
 button.big { width: 100%; padding: 15px; font-size: 16px; }
 button:disabled { opacity: .45; cursor: default; }
-.pick { display: block; border: 1.5px dashed var(--line); border-radius: 12px; padding: 16px; text-align: center; color: var(--accent); font-weight: 700; cursor: pointer; }
-.pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pick { position: relative; display: block; border: 1.5px dashed var(--line); border-radius: 12px; padding: 16px; text-align: center; color: var(--accent); font-weight: 700; cursor: pointer; overflow: hidden; }
+/* 투명한 파일 입력을 버튼 전체에 덮어 손가락이 입력 요소를 직접 누르게 함 (일부 앱 화면은 label 전달 클릭을 막음) */
+.pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.plain-pick { font-size: 13px; color: var(--sub); }
+.plain-pick input { margin-top: 4px; font-size: 14px; color: var(--fg); }
+.pastebox { min-height: 56px; padding: 12px; border: 1px dashed var(--line); border-radius: 10px; font-size: 13px; color: var(--sub); }
+.pastebox:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
 .thumb { position: relative; width: 76px; height: 76px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -155,9 +160,20 @@ details[open] summary { margin-bottom: 12px; }
 
   <section class="panel">
     <h2>1. 입력</h2>
-    <label class="pick" id="pickLabel">＋ 원본 이미지 추가
-      <input id="pick" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
-    </label>
+    <div id="pickArea" style="display:grid;gap:8px">
+      <label class="pick">＋ 원본 이미지 추가
+        <input id="pick" type="file" accept="image/*" multiple aria-label="원본 이미지 추가">
+      </label>
+      <details>
+        <summary class="hint">버튼이 반응하지 않으면</summary>
+        <div style="display:grid;gap:8px;margin-top:8px">
+          <label class="plain-pick">기본 파일 선택
+            <input id="pick2" type="file" accept="image/*">
+          </label>
+          <div id="pastebox" class="pastebox" contenteditable="true" role="textbox" aria-label="이미지 붙여넣기">갤러리에서 이미지를 복사한 뒤 여기를 길게 눌러 붙여넣기</div>
+        </div>
+      </details>
+    </div>
     <div id="thumbs" class="thumbs" hidden></div>
     <label>메모 · 주제 · 강조할 내용
       <textarea id="memo" rows="5" placeholder="예) 전지의 3가지 분류. '3차 전지'라는 표현이 정확하지 않다는 점도 짚어줘."></textarea>
@@ -387,7 +403,7 @@ function revisePrompt(card, post, review) {
 var DEFAULTS = { tier: 'complex', wmText: 'KKD', wmOpacity: '6', wmEnabled: true, postType: 'A', ratio: '5:5', length: '2000' };
 var settings = Object.assign({}, DEFAULTS);
 var state = { images: [], memo: '', card: null, post: null, review: null };
-var sample = null, downloads = null, imgMax = 0, busy = false, ctl = null;
+var sample = null, downloads = null, imgMax = 0, imgTypes = [], busy = false, ctl = null;
 
 function load() {
   try { Object.assign(settings, JSON.parse(localStorage.getItem('kkd-settings') || '{}')); } catch (e) {}
@@ -578,11 +594,27 @@ function syncPost() {
   state.post.title = $('postTitle').value;
   state.post.body = $('postBody').value;
 }
+var OK_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+function addImages(list) {
+  var files = Array.prototype.slice.call(list || []);
+  if (!files.length) return;
+  var skipped = 0, full = false;
+  files.forEach(function (f) {
+    var types = imgTypes.length ? imgTypes : OK_TYPES;
+    if (types.indexOf(f.type) === -1) { skipped++; return; }
+    if (state.images.length >= imgMax) { full = true; return; }
+    state.images.push({ file: f, url: URL.createObjectURL(f) });
+  });
+  renderThumbs();
+  if (skipped) status('JPG·PNG·WEBP 이미지만 보낼 수 있습니다. (' + skipped + '개 제외)', 'err');
+  else if (full) status('이미지는 한 번에 ' + imgMax + '장까지 보낼 수 있습니다.', '');
+  else status('이미지 ' + state.images.length + '장을 넣었습니다.', 'ok');
+}
 function renderThumbs() {
   var t = $('thumbs');
   t.hidden = !state.images.length;
   t.innerHTML = state.images.map(function (im, i) { return '<div class="thumb"><img src="' + im.url + '" alt="원본 이미지 ' + (i + 1) + '"><button type="button" data-rm="' + i + '" aria-label="삭제">×</button></div>'; }).join('');
-  $('pickLabel').hidden = !imgMax;
+  $('pickArea').hidden = !imgMax;
 }
 function render() {
   renderThumbs();
@@ -633,14 +665,23 @@ function readSettings() {
 
 function bind() {
   ['tier', 'wmText', 'wmOpacity', 'wmEnabled', 'postType', 'ratio', 'length'].forEach(function (id) { $(id).addEventListener('change', readSettings); });
-  $('pick').addEventListener('change', function (e) {
-    Array.prototype.slice.call(e.target.files || []).forEach(function (f) {
-      if (state.images.length < imgMax) state.images.push({ file: f, url: URL.createObjectURL(f) });
-    });
-    if ((e.target.files || []).length && state.images.length >= imgMax) status('이미지는 한 번에 ' + imgMax + '장까지 보낼 수 있습니다.', '');
+  var onPick = function (e) {
+    addImages(e.target.files);
     e.target.value = '';
-    renderThumbs();
+  };
+  $('pick').addEventListener('change', onPick);
+  $('pick2').addEventListener('change', onPick);
+  // 붙여넣기: 갤러리에서 복사한 이미지를 받음 (붙여넣은 내용은 상자에 남기지 않음)
+  document.addEventListener('paste', function (e) {
+    var files = [];
+    Array.prototype.slice.call((e.clipboardData && e.clipboardData.items) || []).forEach(function (it) {
+      if (it.kind === 'file') { var f = it.getAsFile(); if (f) files.push(f); }
+    });
+    if (files.length) { e.preventDefault(); addImages(files); }
+    else if (e.target && e.target.id === 'pastebox') e.preventDefault();
   });
+  $('pastebox').addEventListener('drop', function (e) { e.preventDefault(); addImages(e.dataTransfer && e.dataTransfer.files); });
+  $('pastebox').addEventListener('beforeinput', function (e) { if (e.inputType !== 'insertFromPaste') e.preventDefault(); });
   $('thumbs').addEventListener('click', function (e) {
     var i = e.target.getAttribute('data-rm');
     if (i !== null) { URL.revokeObjectURL(state.images[i].url); state.images.splice(Number(i), 1); renderThumbs(); }
@@ -690,7 +731,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitCard);
   if (!sample) { $('unavailable').hidden = false; }
   else {
     try { var lim = await sample.limits(); imgMax = lim && lim.images ? lim.images.maxCount : 0; } catch (e) { imgMax = 0; }
-    if (lim && lim.images) $('pick').accept = lim.images.mediaTypes.join(',');
+    if (lim && lim.images) imgTypes = lim.images.mediaTypes || [];
   }
   renderThumbs(); setBusy(busy);
 })();
