@@ -50,10 +50,6 @@
   한글: 종이 체크리스트에 체크 표시하는 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: hand ticking a paper checklist, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 14] 다음 편에서는 암검진을 알려드릴게요.
-  한글: 진료실에서 상담하는 의사, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: doctor giving a consultation in a clinic office, warm natural light, realistic photo, vertical 9:16, no text in image
-
-[장면 15] 개인 상황에 따라 다르니 전문가와 상담하세요.
+[장면 14] 개인 상황에 따라 다르니 전문가와 상담하세요.
   한글: 의사와 이야기하는 60대 한국인 환자, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean patient in their 60s talking with a doctor, warm natural light, realistic photo, vertical 9:16, no text in image
