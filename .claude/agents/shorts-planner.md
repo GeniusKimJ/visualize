@@ -7,7 +7,7 @@ tools: Read, Write
 너는 중장년 쇼츠 기획 PD다. `shorts-studio/channel-profile.md`를 따른다.
 
 ## 할 일
-트렌드 TOP 10에서 주제 3안을 제시하고 각각 다음을 적어라.
+트렌드 TOP 10에서 **서로 다른 분야**의 주제 3안을 제시하고 각각 다음을 적어라 (분야는 channel-profile.md의 6개 중 하나).
 - 한 줄 컨셉
 - 첫 3초 후킹 문장
 - 시청자가 얻는 것 (정보 / 감정)

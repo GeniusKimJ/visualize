@@ -17,17 +17,26 @@ var CHANNEL = '오늘의 5060'; // 채널 이름이 정해지면 여기만 바�
 // 배경 띠 없이 글자만 얹는 스타일: 분야는 강조색(태그·2줄)으로만 구분
 var THEMES = {
   건강: { accent: '#FFD62E' },
-  돈: { accent: '#7CF08A' },
-  생활: { accent: '#FF8A3D' },
-  여가: { accent: '#7FD8FF' },
+  재테크: { accent: '#7CF08A' },
+  '노후 준비': { accent: '#FFB547' },
+  여행: { accent: '#7FD8FF' },
+  생활정보: { accent: '#FF8A3D' },
+  '최신 이슈': { accent: '#FF5A5A' },
 };
+// 예전 테마 이름도 계속 동작
+var THEME_ALIAS = { 돈: '재테크', 생활: '생활정보', 여가: '여행', 노후: '노후 준비', 이슈: '최신 이슈' };
+function themeName(name) {
+  return THEMES[name] ? name : THEME_ALIAS[name] || '건강';
+}
 
 // 배경 사진 자리 표시 (실제 영상에서는 Vrew AI 이미지가 들어감)
 var PREVIEW_BG = {
   건강: 'linear-gradient(180deg,#cfe3f3 0%,#9cc3e0 55%,#e9d9c4 100%)',
-  돈: 'linear-gradient(180deg,#f3e6c4 0%,#d9b46a 60%,#7b5a2a 100%)',
-  생활: 'linear-gradient(180deg,#e9e4dc 0%,#bfb2a2 60%,#5e5246 100%)',
-  여가: 'linear-gradient(180deg,#ffb35c 0%,#e2603a 50%,#5a2a4a 100%)',
+  재테크: 'linear-gradient(180deg,#f3e6c4 0%,#d9b46a 60%,#7b5a2a 100%)',
+  '노후 준비': 'linear-gradient(180deg,#e8eef0 0%,#a9bcc4 60%,#4f6470 100%)',
+  여행: 'linear-gradient(180deg,#ffb35c 0%,#e2603a 50%,#5a2a4a 100%)',
+  생활정보: 'linear-gradient(180deg,#e9e4dc 0%,#bfb2a2 60%,#5e5246 100%)',
+  '최신 이슈': 'linear-gradient(180deg,#dfe3ea 0%,#9aa5b5 60%,#3b4352 100%)',
 };
 
 function esc(s) {
@@ -57,9 +66,10 @@ var FIT_JS =
   'while(el.scrollWidth>980&&s>96){s-=4;el.style.fontSize=s+"px";}});';
 
 function cardHtml(opt) {
-  var t = THEMES[opt.theme] || THEMES['건강'];
+  var name = themeName(opt.theme);
+  var t = THEMES[name];
   var vars = '--accent:' + t.accent;
-  var bg = opt.preview ? '<div class="bg" style="background:' + (PREVIEW_BG[opt.theme] || PREVIEW_BG['건강']) + '"></div>' : '';
+  var bg = opt.preview ? '<div class="bg" style="background:' + PREVIEW_BG[name] + '"></div>' : '';
   return (
     '<div class="tc" style="' + vars + '">' + bg +
     '<div class="band">' +
@@ -100,10 +110,12 @@ async function render(opt, file, preview) {
 }
 
 var SAMPLES = [
-  { theme: '건강', tag: '2026년 대상', line1: '짝수년생 건강검진', line2: '12월 31일까지', note: '건강 · 노랑 강조 — 시범 회차 (검증 완료 문구)' },
-  { theme: '돈', tag: '디자인 예시', line1: '은퇴 후 건보료', line2: '이것부터 확인', note: '돈 · 연두 강조' },
-  { theme: '생활', tag: '디자인 예시', line1: '이런 문자 오면', line2: '절대 누르지 마세요', note: '생활·사기예방 · 주황 강조' },
-  { theme: '여가', tag: '디자인 예시', line1: '가을 걷기 좋은 길', line2: '수도권 3곳', note: '여가 · 하늘 강조' },
+  { theme: '건강', tag: '2026년 대상', line1: '짝수년생 건강검진', line2: '12월 31일까지', note: '건강 · 노랑 — 시범 회차 (검증 완료 문구)' },
+  { theme: '재테크', tag: '디자인 예시', line1: '은퇴 후 건보료', line2: '이것부터 확인', note: '재테크 · 연두' },
+  { theme: '노후 준비', tag: '디자인 예시', line1: '연금 받기 전에', line2: '꼭 볼 것 3가지', note: '노후 준비 · 금색' },
+  { theme: '여행', tag: '디자인 예시', line1: '가을 걷기 좋은 길', line2: '수도권 3곳', note: '여행 · 하늘' },
+  { theme: '생활정보', tag: '디자인 예시', line1: '이런 문자 오면', line2: '절대 누르지 마세요', note: '생활정보 · 주황' },
+  { theme: '최신 이슈', tag: '디자인 예시', line1: '이번 주 바뀐 제도', line2: '한눈에 정리', note: '최신 이슈 · 빨강' },
 ];
 
 function showcase(out) {
@@ -118,7 +130,7 @@ function showcase(out) {
     'figure{margin:0}.scale{width:252px;height:448px;overflow:hidden;border-radius:14px}.scale .tc{transform:scale(.2333);transform-origin:0 0}' +
     'figcaption{margin-top:8px;color:#9aa3b2;font-size:15px}ul{color:#c9d0db}</style></head><body><main>' +
     '<h1>강조 제목 스타일 — 배경 없는 두 줄</h1>' +
-    '<p>배경 띠 없이 태그 1개, 흰 줄 1개, 강조색 줄 1개를 굵은 검은 테두리로 이미지 위에 바로 얹습니다. 분야는 강조색으로 구분합니다. 뒤 배경은 Vrew AI 이미지가 들어갈 자리입니다.</p>' +
+    '<p>배경 띠 없이 태그 1개, 흰 줄 1개, 강조색 줄 1개를 굵은 검은 테두리로 이미지 위에 바로 얹습니다. 6개 분야는 강조색으로 구분합니다. 뒤 배경은 Vrew AI 이미지가 들어갈 자리입니다.</p>' +
     '<div class="grid">' + cards + '</div>' +
     '<h1 style="margin-top:28px">규칙</h1><ul>' +
     '<li>1줄: 누구 얘기인지 (흰색) · 2줄: 핵심 숫자나 행동 (강조색)</li>' +
