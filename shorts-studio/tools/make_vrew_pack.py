@@ -127,7 +127,7 @@ def card(title, body, copy_text=None, note=""):
     )
 
 
-def build_html(episode, script, scenes, up):
+def build_html(episode, script, scenes, up, has_title=False):
     scene_cards = []
     for i, s in enumerate(scenes, 1):
         ko = f"{s['이미지프롬프트_ko']}, {IMAGE_STYLE_KO}"
@@ -158,9 +158,16 @@ def build_html(episode, script, scenes, up):
         desc_card=card("설명란", up["desc"], up["desc"], "[음원] 칸은 고른 배경음악으로 채운 뒤 올리세요."),
         pinned_card=card("고정댓글", up["pinned"], up["pinned"]),
         when=html.escape(up["when"]) or "—",
+        title_section=TITLE_SECTION if has_title else "",
         checks=check_items,
     )
 
+
+TITLE_SECTION = """<h2>0단계 · 첫 장면 강조 제목</h2>
+<section class="card"><img src="title-preview.png" alt="강조 제목 미리보기" style="width:100%;max-width:320px;border-radius:12px;display:block">
+<p class="note">Vrew 1번 장면 → 삽입 → 이미지 → 같은 폴더의 <strong>title-overlay.png</strong>(투명 배경) → 화면 전체 크기로 맨 위에 얹기.
+1번 장면의 '큰 글자'는 이 이미지가 대신하므로 따로 넣지 않습니다. 아래 배경은 AI 이미지 자리 표시입니다.</p></section>
+"""
 
 HTML_TEMPLATE = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
@@ -202,7 +209,7 @@ button{{font:inherit;cursor:pointer;border:0;border-radius:8px}}
 <li>배경음악(오디오 보관함·Vrew 음원) → 내보내기 mp4</li>
 <li>제목·설명란·고정댓글 복사해 업로드</li>
 </ol>
-<h2>1단계 · 대본</h2>
+{title_section}<h2>1단계 · 대본</h2>
 {script_card}
 <h2>2~3단계 · 장면별 이미지와 큰 글자</h2>
 {scenes}
@@ -275,7 +282,8 @@ def main():
     out.mkdir(exist_ok=True)
     for name, text in build_texts(script, scenes, up).items():
         (out / name).write_text(text, encoding="utf-8")
-    (out / "index.html").write_text(build_html(folder.name, script, scenes, up), encoding="utf-8")
+    has_title = (out / "title-overlay.png").exists()
+    (out / "index.html").write_text(build_html(folder.name, script, scenes, up, has_title), encoding="utf-8")
     print(f"완료: {out} (장면 {len(scenes)}개)")
     return 0
 

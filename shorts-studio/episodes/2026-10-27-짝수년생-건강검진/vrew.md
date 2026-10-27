@@ -13,7 +13,9 @@
   "나레이션": "올해 건강검진, 아직 안 받으셨죠?",
   "큰글자": "짝수년생 건강검진\n12월 31일까지",
   "이미지프롬프트_ko": "12월 달력이 걸린 거실 벽, 아늑한 한국 가정",
-  "이미지프롬프트_en": "living room wall with a december calendar, cozy korean home"
+  "이미지프롬프트_en": "living room wall with a december calendar, cozy korean home",
+  "태그": "2026년 대상",
+  "테마": "건강"
  },
  {
   "장면": 2,

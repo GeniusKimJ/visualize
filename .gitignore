@@ -13,6 +13,7 @@ Thumbs.db
 !assets/templates/*.html
 !examples/*.html
 !shorts-studio/episodes/*/vrew-pack/index.html
+!shorts-studio/brand/*.html
 
 # Eval results (local only)
 eval/eval-results.md

@@ -24,7 +24,9 @@ argument-hint: "[주제(선택)] [길이초(기본 45)]"
 7. **저장**: `shorts-studio/episodes/<YYYY-MM-DD>-<주제>/` 아래에
    `trend.md`, `plan.md`, `script.md`, `factcheck.md`, `vrew.md`, `upload.md`, `qa.md`로 저장한다.
    Vrew 화면·휴대폰에서만 확인할 수 있는 항목은 `qa.md`에 '사용자 확인 필요'로 남긴다.
-7-1. **Vrew 복사용 패키지**: `python3 shorts-studio/tools/make_vrew_pack.py shorts-studio/episodes/<회차폴더>` 실행.
+7-1. **강조 제목 카드**: `node shorts-studio/tools/make_title_card.js shorts-studio/episodes/<회차폴더>` 실행
+   (`vrew-pack/title-overlay.png`, `title-preview.png` 생성. 스타일 규칙은 `shorts-studio/brand/title-style.md`).
+7-2. **Vrew 복사용 패키지**: `python3 shorts-studio/tools/make_vrew_pack.py shorts-studio/episodes/<회차폴더>` 실행.
    검증·QA가 통과가 아니거나 장면 데이터가 원고와 다르면 스크립트가 거부하니, 출력된 이유대로 해당 단계로 되돌린다.
 8. **요약 출력**: 사용자에게 다음만 짧게 보여준다.
    - `vrew-pack/index.html` 경로 (이 페이지를 열고 위에서부터 복사하면 된다는 안내)
