@@ -11,7 +11,8 @@ Claude Code에서 이 저장소를 연 뒤:
 /shorts 기초연금 45     # 주제와 길이를 정해서 시작
 ```
 
-결과물은 `episodes/<날짜>-<주제>/`에 저장됩니다. Vrew 작업은 [VREW-GUIDE.md](VREW-GUIDE.md)를 보면서 `vrew.md`를 따라 하면 됩니다.
+결과물은 `episodes/<날짜>-<주제>/`에 저장됩니다. 검증·점검을 통과하면 `vrew-pack/index.html`(복사 버튼이 달린 Vrew 작업 카드)이 자동으로 만들어집니다.
+수동으로 다시 만들려면 `python3 shorts-studio/tools/make_vrew_pack.py shorts-studio/episodes/<회차폴더>`. Vrew 작업은 [VREW-GUIDE.md](VREW-GUIDE.md)를 보면서 `vrew.md`를 따라 하면 됩니다.
 
 ## 서브에이전트 분담 (`.claude/agents/`)
 

@@ -2,6 +2,121 @@
 
 # Vrew 편집 지시서 — 2026-10-27 짝수년생 건강검진
 
+## 0. 자동 패키지용 장면 데이터 (v4, 15장면)
+
+`tools/make_vrew_pack.py`가 읽는 블록입니다. 장면 번호는 v4 원고 줄 순서(Vrew 클립 순서)와 같습니다. 실제 앱 화면·로고는 AI로 만들지 않습니다.
+
+```vrew-scenes
+[
+ {
+  "장면": 1,
+  "나레이션": "올해 건강검진, 아직 안 받으셨죠?",
+  "큰글자": "짝수년생 건강검진\n12월 31일까지",
+  "이미지프롬프트_ko": "12월 달력이 걸린 거실 벽, 아늑한 한국 가정",
+  "이미지프롬프트_en": "living room wall with a december calendar, cozy korean home"
+ },
+ {
+  "장면": 2,
+  "나레이션": "1966년생, 1976년생처럼",
+  "큰글자": "1966 · 1976",
+  "이미지프롬프트_ko": "공원에서 함께 웃는 50~60대 한국인 부부",
+  "이미지프롬프트_en": "korean couple in their 50s and 60s smiling together in a park"
+ },
+ {
+  "장면": 3,
+  "나레이션": "짝수 해에 태어나셨다면",
+  "큰글자": "",
+  "이미지프롬프트_ko": "숫자 2, 4, 6 나무 블록이 놓인 탁자",
+  "이미지프롬프트_en": "wooden number blocks 2, 4, 6 on a table"
+ },
+ {
+  "장면": 4,
+  "나레이션": "올해 일반건강검진 대상이에요.",
+  "큰글자": "",
+  "이미지프롬프트_ko": "밝은 병원 건강검진 접수 창구",
+  "이미지프롬프트_en": "bright hospital health checkup reception desk"
+ },
+ {
+  "장면": 5,
+  "나레이션": "사무직이 아닌 직장인은 매년 대상이에요.",
+  "큰글자": "",
+  "이미지프롬프트_ko": "판매원, 배송 기사, 경비원 등 다양한 직업의 한국 중년 직장인들",
+  "이미지프롬프트_en": "middle-aged korean workers of various jobs, store clerk, delivery driver, security guard"
+ },
+ {
+  "장면": 6,
+  "나레이션": "기한은 12월 31일까지,",
+  "큰글자": "12월 31일",
+  "이미지프롬프트_ko": "12월 마지막 날에 동그라미 친 탁상 달력",
+  "이미지프롬프트_en": "desk calendar with the last day of december circled"
+ },
+ {
+  "장면": 7,
+  "나레이션": "올해도 얼마 안 남았어요.",
+  "큰글자": "",
+  "이미지프롬프트_ko": "창가에 놓인 모래시계, 겨울 햇살",
+  "이미지프롬프트_en": "hourglass on a windowsill, winter sunlight"
+ },
+ {
+  "장면": 8,
+  "나레이션": "연말엔 예약이 몰릴 수 있으니",
+  "큰글자": "",
+  "이미지프롬프트_ko": "사람들이 기다리는 병원 대기실",
+  "이미지프롬프트_en": "hospital waiting room with people waiting"
+ },
+ {
+  "장면": 9,
+  "나레이션": "지금 미리 잡아 두세요.",
+  "큰글자": "",
+  "이미지프롬프트_ko": "전화로 병원 예약하는 50대 한국 여성",
+  "이미지프롬프트_en": "korean woman in her 50s booking a hospital appointment by phone"
+ },
+ {
+  "장면": 10,
+  "나레이션": "내가 대상인지는",
+  "큰글자": "",
+  "이미지프롬프트_ko": "소파에서 스마트폰을 보는 60대 한국 남성",
+  "이미지프롬프트_en": "korean man in his 60s looking at a smartphone on a sofa"
+ },
+ {
+  "장면": 11,
+  "나레이션": "The건강보험 앱이나",
+  "큰글자": "The건강보험 앱",
+  "이미지프롬프트_ko": "스마트폰을 든 손, 화면은 흐리게",
+  "이미지프롬프트_en": "hand holding a smartphone, screen blurred"
+ },
+ {
+  "장면": 12,
+  "나레이션": "공단 고객센터 1577-1000에서",
+  "큰글자": "1577-1000",
+  "이미지프롬프트_ko": "헤드셋을 쓴 친절한 고객센터 상담원",
+  "이미지프롬프트_en": "friendly call center agent wearing a headset"
+ },
+ {
+  "장면": 13,
+  "나레이션": "꼭 확인해 보세요.",
+  "큰글자": "",
+  "이미지프롬프트_ko": "종이 체크리스트에 체크 표시하는 손",
+  "이미지프롬프트_en": "hand ticking a paper checklist"
+ },
+ {
+  "장면": 14,
+  "나레이션": "다음 편에서는 암검진을 알려드릴게요.",
+  "큰글자": "다음 편: 암검진",
+  "이미지프롬프트_ko": "진료실에서 상담하는 의사",
+  "이미지프롬프트_en": "doctor giving a consultation in a clinic office"
+ },
+ {
+  "장면": 15,
+  "나레이션": "개인 상황에 따라 다르니 전문가와 상담하세요.",
+  "큰글자": "",
+  "이미지프롬프트_ko": "의사와 이야기하는 60대 한국인 환자",
+  "이미지프롬프트_en": "korean patient in their 60s talking with a doctor"
+ }
+]
+```
+
+
 - 입력 원고: `script.md` 맨 위 **"최종 원고 v3"의 'Vrew 붙여넣기용 순수 원고 (v3)'** (17줄)
 - 팩트체크: `factcheck.md` 3차 검증 **최종판정 = 통과** (v3 수정 3곳 반영 조건 충족) → 작업 진행
 - 목표 길이: 약 44~50초 (30~60초 범위)
