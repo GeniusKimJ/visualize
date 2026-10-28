@@ -12,7 +12,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var CHANNEL = '오늘의 5060'; // 채널 이름이 정해지면 여기만 바꾸세요
+var CHANNEL = ''; // 제목 그림에 채널명을 넣으려면 여기에 적으세요 (비우면 표시 안 함)
 
 // 배경 띠 없이 글자만 얹는 스타일: 분야는 강조색(태그·2줄)으로만 구분
 var THEMES = {
@@ -76,7 +76,7 @@ function cardHtml(opt) {
     (opt.tag ? '<span class="chip">' + esc(opt.tag) + '</span>' : '') +
     '<span class="l l1">' + esc(opt.line1) + '</span>' +
     '<span class="l l2">' + esc(opt.line2) + '</span>' +
-    '<span class="sig">' + esc(CHANNEL) + '</span>' +
+    (CHANNEL ? '<span class="sig">' + esc(CHANNEL) + '</span>' : '') +
     '</div></div>'
   );
 }
