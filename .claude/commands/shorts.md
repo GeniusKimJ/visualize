@@ -33,4 +33,6 @@ argument-hint: "[주제(선택)] [길이초(기본 45)]"
    - Vrew에 붙여넣을 원고
    - 추천 제목 1안
    - 직접 열어볼 출처 링크 2~3개
+   - SendUserFile로 `vrew-pack/index.html`, `vrew-pack/title-overlay.png`를 대화창에 첨부
+   - 사용법 고정 페이지 안내: https://claude.ai/artifact/9n37DebTLvR1jXQucHZnxh
    - '사용자 확인 필요' QA 항목

@@ -29,10 +29,11 @@ Claude Code에서 이 저장소를 연 뒤:
 
 공통 기준은 [channel-profile.md](channel-profile.md)에 있습니다. 톤이나 금지 사항을 바꾸려면 이 파일만 고치면 됩니다.
 
-## 주간 루틴 (예시)
-- 월: `/shorts`로 트렌드 조사 → 이번 주 주제 3~5개 확정
-- 화~금: 하루 1편 제작·업로드 (편집 20~40분 목표)
-- 일: YouTube Studio에서 조회수·평균 시청률·구독 전환을 확인해 growth-manager에 주간 회고 요청
+## 하루 루틴 (매일 1편)
+자세한 순서는 [HOW-TO.md](HOW-TO.md) (같은 내용의 고정 페이지: https://claude.ai/artifact/9n37DebTLvR1jXQucHZnxh)
+- 매일 06:47 (한국 시간): 예약 작업이 트렌드 조사 + 주제 3안을 준비하고 휴대폰으로 알림 → 번호만 답하기
+- 이후: Claude가 원고·사실 검증·작업 카드·제목 그림까지 만들어 대화창에 첨부 → Vrew 편집 10~15분 → 업로드
+- 일: YouTube Studio에서 조회수·평균 시청률·구독 증가를 확인해 growth-manager에 주간 회고 요청
 
 ## 수익화 로드맵
 1. **0~3개월 — 기반 쌓기**
