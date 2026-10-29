@@ -39,8 +39,9 @@ argument-hint: "[주제(선택)] [길이초(기본 45)]"
 
 ## 여러 편 모드 (예: "5편 만들어줘")
 1. 1단계 트렌드 조사 후 planner로 서로 다른 분야(최소 4개) 후보 8~10안을 만들고, 사용자가 N개를 고르게 한다.
+   후보는 모두 1년 뒤에도 맞는 주제여야 한다 (channel-profile.md '오래 봐도 맞는 주제만', 기간 한정 주제 제외).
 2. 고른 편마다 `shorts-studio/episodes/<YYYY-MM-DD>-<주제>/trend.md`에 트렌드·후보 표를 넣고,
    general-purpose 에이전트를 편마다 1개씩 **병렬로** 띄워 `shorts-studio/batch-episode-prompt.md`를 따르게 한다
    (`{N}` 후보 번호, `{DIR}` 폴더명, `{THEME}` 분야, `{NOTE}` 근거·주의점).
 3. 편이 끝나는 대로 그 폴더만 커밋·push하고, 마지막에 N편 표(분야·길이·추천 제목)와 편별 '사용자 확인 필요'를 요약하고
-   편마다 `vrew-pack/index.html`, `title-overlay.png`를 첨부한다. 신청 기한 등 시점이 급한 편은 먼저 올리라고 안내한다.
+   편마다 `vrew-pack/index.html`, `title-overlay.png`를 첨부한다.
