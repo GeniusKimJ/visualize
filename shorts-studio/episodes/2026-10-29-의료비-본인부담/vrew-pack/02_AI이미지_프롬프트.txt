@@ -1,0 +1,43 @@
+[장면 1] 의료비 100원 중 약 31원은 직접 냈어요.
+  한글: 병원 접수창구 앞에서 서류를 들고 서 있는 50~60대 한국인 부부, 위쪽은 흐린 벽과 천장, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s standing at a hospital reception desk holding papers, plain soft blurred wall and ceiling in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 2] 2024년 나라 전체 의료비 기준입니다.
+  한글: 밝은 병원 복도를 천천히 걷는 60대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s walking slowly along a bright hospital corridor, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 3] 가계 직접부담 비중은 30.9%예요.
+  한글: 식탁에서 병원 영수증을 펴 놓고 계산기를 두드리는 50대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 50s at a dining table spreading out hospital receipts and using a calculator, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 4] OECD 평균은 19.1%입니다.
+  한글: 영수증 두 장을 나란히 놓고 비교해 보는 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hands placing two paper receipts side by side to compare them on a table, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 5] 정부와 의무보험이 낸 몫은 59.8%예요.
+  한글: 거실 탁자 위에 놓인 카드 모양 증서와 서류 봉투, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: a plain card-shaped certificate and a document envelope on a living room table, no logos or text, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 6] OECD 평균 75.2%보다 낮습니다.
+  한글: 높이가 다른 두 개의 서류 더미가 놓인 책상, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: a desk with two stacks of documents of different heights, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 7] 국민 1인당 의사 외래진료는 연 17.9회.
+  한글: 진료실에서 의사와 상담하는 60대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s consulting with a doctor in a clinic examination room, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 8] OECD 국가 중 가장 많아요.
+  한글: 병원 대기실 의자에 앉아 순서를 기다리는 50~60대 한국인들, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean people in their 50s and 60s sitting in a hospital waiting room waiting for their turn, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 9] 의료혁신위원회가 10월 29일 논의했어요.
+  한글: 서류를 앞에 두고 둘러앉은 회의 탁자, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: a conference table with documents in front of empty chairs, no people, no logos, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 10] 의료비 관리 권고안은 확정이 아닙니다.
+  한글: 책상 위에 펼쳐진 초안 서류와 연필, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: a draft document and a pencil on a desk, no readable text, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 11] 개인 상황에 따라 다르니 전문가와 상담하세요.
+  한글: 상담실에서 서류를 보며 이야기하는 60대 한국인 부부와 상담사, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s talking with an advisor over documents in a consultation room, warm natural light, realistic photo, vertical 9:16, no text in image
