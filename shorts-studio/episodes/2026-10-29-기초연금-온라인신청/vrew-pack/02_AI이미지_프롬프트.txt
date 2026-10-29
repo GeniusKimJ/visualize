@@ -1,0 +1,63 @@
+[장면 1] 기초연금 탈락해도 끝이 아니에요.
+  한글: 서류를 손에 든 채 컴퓨터 앞에 앉아 있는 60대 한국인 부부, 위쪽은 흐린 벽, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s sitting at a computer holding papers, plain soft blurred wall in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 2] 신청할 때 수급희망 이력관리를 함께 신청하면
+  한글: 컴퓨터 앞에서 신청 서류를 살펴보는 60대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s reviewing application papers in front of a computer, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 3] 탈락 뒤 5년간 매년 2회 조사해서
+  한글: 벽걸이 달력을 바라보는 60대 한국인 남성, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s looking at a wall calendar, numbers softly blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 4] 수급 가능성이 확인되면
+  한글: 서류 더미를 확인하는 손, 밝은 탁자, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hands checking a stack of papers on a bright table, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 5] 신청한 것으로 봐 줍니다.
+  한글: 서류 위에 도장을 찍는 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hand stamping a paper document, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 6] 10월 30일부터 복지로 온라인 신청은
+  한글: 10월 달력을 넘기는 손, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hand turning a desk calendar page, numbers softly blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 7] 클릭 한 번으로 함께 신청해요.
+  한글: 노트북 터치패드를 누르는 60대 한국인의 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hand of a korean person in their 60s clicking a laptop trackpad, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 8] 배우자 동의는 문자로 받아요.
+  한글: 스마트폰으로 문자 메시지를 받은 60대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s receiving a text message on a smartphone, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 9] 배우자가 옆에 없어도
+  한글: 거실 소파에 혼자 앉아 있는 60대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s sitting alone on a living room sofa, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 10] 문자로 온 주소에서 바로 동의해요.
+  한글: 스마트폰 화면을 보며 손가락으로 누르는 60대 한국인 여성, 화면 내용은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s tapping a smartphone screen, screen content blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 11] 서류가 없어도 먼저 신청하세요.
+  한글: 책상 위에 서류가 흩어져 있고 고민하는 60대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s thinking at a desk with scattered papers, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 12] 임대차 계약서처럼 따로 내는 서류는
+  한글: 임대차 계약서 같은 서류를 손에 든 모습, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hands holding a lease-like contract paper, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 13] 나중에 온라인이나 방문으로 내요.
+  한글: 구청 민원 창구에서 서류를 내는 60대 한국인, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean person in their 60s handing documents at a public service counter, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 14] 수급 여부는 소득과 재산에 따라 달라요.
+  한글: 탁자 위 계산기와 서류, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: calculator and papers on a table, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 15] 복지로에서 직접 확인해 보세요.
+  한글: 스마트폰으로 검색하는 60대 한국인 부부, 화면은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s searching on a smartphone, screen blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 16] 개인 상황에 따라 다르니 전문가와 상담하세요.
+  한글: 상담 창구에서 이야기를 나누는 60대 한국인 부부와 상담원, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s talking with a counselor at a desk, warm natural light, realistic photo, vertical 9:16, no text in image
