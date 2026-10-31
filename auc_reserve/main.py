@@ -61,7 +61,7 @@ def load_config(path):
     cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
     cfg.setdefault("auto_submit", False)          # true: [예약하기] → [예]까지 자동 (결제는 직접)
     cfg.setdefault("retry_on_conflict", 1)        # 먼저 예약돼 실패하면 다시 시도할 횟수
-    cfg.setdefault("auto_agree_terms", True)      # 결제 화면의 필수 약관 3개 자동 체크 ([결제하기]는 직접)
+    cfg.setdefault("auto_agree_terms", False)     # true면 결제 화면의 필수 약관 3개 자동 체크 ([결제하기]는 직접)
     cfg.setdefault("max_wait_after_open_min", 30)
     cfg.setdefault("ntp_server", "time.google.com")
     cfg.setdefault("browser", {})
@@ -544,7 +544,7 @@ class Bot:
             nos = self.page.locator(S.STEP3_RES_NO).evaluate_all("els => els.map(e => e.value)")
             if not nos:
                 return False, "결제 화면에 예약번호 없음"
-            if self.cfg.get("auto_agree_terms", True):
+            if self.cfg.get("auto_agree_terms", False):
                 for sel in S.STEP3_AGREES:
                     if self.count(sel):
                         self.page.locator(sel).check()

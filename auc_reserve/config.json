@@ -24,7 +24,7 @@
   "applicant": { "사용인원": 4 },
   "auto_submit": true,
   "retry_on_conflict": 1,
-  "auto_agree_terms": true,
+  "auto_agree_terms": false,
   "notify": { "telegram_token": "", "chat_id": "", "sound": true },
 
   "watch_on_fail": "ask",
