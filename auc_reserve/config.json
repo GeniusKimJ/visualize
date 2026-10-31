@@ -2,7 +2,7 @@
   "open_mode": "rolling",
   "open_days_before": 7,
   "open_time": "15:00:00",
-  "open_window_min": 3,
+  "open_window_min": 1,
   "poll_interval_sec": 1.0,
   "fast_window_sec": 20,
   "fast_poll_interval_sec": 0.5,
