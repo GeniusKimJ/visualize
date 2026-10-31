@@ -144,6 +144,7 @@ class App:
             (bar1, "plan", "일정 확인", lambda: self.start(["--open", "--dry-run"], ask=False), None),
             (bar1, "check", "점검", lambda: self.start(["--check"], ask=False), None),
             (bar1, "login", "로그인 테스트", lambda: self.start(["--login"], ask=False), None),
+            (bar1, "chrome", "예약용 크롬 열기", self.open_chrome, None),
             (bar2, "open", "▶  오픈 대기 시작", lambda: self.start(["--open", "--yes"]), "Big.TButton"),
             (bar2, "watch", "빈자리 감시", lambda: self.start(["--watch", "--yes"]), None),
             (bar2, "stop", "■  중지", self.stop, None),
@@ -301,6 +302,9 @@ class App:
             ("telegram_token", "텔레그램 봇 토큰", ""),
             ("chat_id", "텔레그램 chat_id", ""),
             ("auc_id", "공사회원 아이디 (공사회원 로그인 시 자동 입력)", ""),
+            ("profile_dir", "예약용 크롬 프로필 폴더", "chrome_profile"),
+            ("cdp_port", "예약용 크롬 연결 포트", "9222"),
+            ("chrome_path", "chrome.exe 경로 (비우면 자동)", ""),
         ]
         for i, (key, label, default) in enumerate(rows):
             ttk.Label(f, text=label).grid(row=i, column=0, sticky="w", pady=2)
@@ -367,6 +371,10 @@ class App:
         self.turbo.set(bool(c.get("turbo", True)))
         self.login_type.set("공사회원 아이디" if c.get("login_type") == "member" else "통합 로그인 (안양시)")
         self.adv["auc_id"].set(self.read_env_id())
+        br = c.get("browser", {})
+        self.adv["profile_dir"].set(br.get("profile_dir", "chrome_profile"))
+        self.adv["cdp_port"].set(str(br.get("cdp_port", 9222)))
+        self.adv["chrome_path"].set(br.get("chrome_path", ""))
 
     def collect(self):
         """화면 값 → config dict. 형식이 틀리면 ValueError."""
@@ -405,6 +413,10 @@ class App:
         c["burst_interval_sec"] = max(0.3, float(self.adv["burst_interval_sec"].get()))
         c["turbo"] = self.turbo.get()
         c["login_type"] = "member" if self.login_type.get().startswith("공사회원") else "sso"
+        br = dict(c.get("browser", {}))
+        br.update(mode=br.get("mode", "cdp"), profile_dir=self.adv["profile_dir"].get().strip() or "chrome_profile",
+                  cdp_port=int(self.adv["cdp_port"].get()), chrome_path=self.adv["chrome_path"].get().strip())
+        c["browser"] = br
         c["notify"] = {"telegram_token": self.adv["telegram_token"].get().strip(),
                        "chat_id": self.adv["chat_id"].get().strip(), "sound": self.sound.get()}
         c["block_images"] = self.block_images.get()
@@ -475,7 +487,7 @@ class App:
 
     # ───────────────────────── 작업 실행 ─────────────────────────
     def set_running(self, running):
-        for k in ("save", "plan", "check", "login", "open", "watch"):
+        for k in ("save", "plan", "check", "login", "chrome", "open", "watch"):
             self.btns[k].state(["disabled"] if running else ["!disabled"])
         self.btns["stop"].state(["!disabled"] if running else ["disabled"])
         self.btns["close"].state(["!disabled"] if self.browser_open else ["disabled"])
@@ -524,6 +536,17 @@ class App:
             if core.STOP.is_set():
                 break
         self.browser_open = False
+
+    def open_chrome(self):
+        """프로그램 작업 없이 예약용 크롬만 띄움. 여기서 로그인해 두고 열어 두면 작업할 때 그대로 연결."""
+        if not self.save_cfg(quiet=True):
+            return
+        try:
+            cfg = core.load_config(self.cfg_path)
+            _, msg = core.launch_chrome(cfg, core.S.LOGIN_URL)
+            self.append(msg + " — 이 창에서 로그인하고 닫지 말고 두세요.", logging.INFO, "ok")
+        except Exception as e:  # noqa: BLE001
+            messagebox.showerror("크롬 실행", str(e))
 
     def stop(self):
         core.STOP.set()

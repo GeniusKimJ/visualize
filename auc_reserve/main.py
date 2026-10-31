@@ -185,6 +185,58 @@ def find_chrome(configured=""):
     return next((c for c in cands if c and os.path.exists(c)), "")
 
 
+def chrome_profile_path(b):
+    """config의 profile_dir (상대 경로면 프로그램 폴더 기준, %LOCALAPPDATA% 같은 환경변수 허용)."""
+    p = Path(os.path.expandvars(os.path.expanduser(b.get("profile_dir", "chrome_profile"))))
+    return p if p.is_absolute() else BASE / p
+
+
+def is_default_chrome_profile(path):
+    """평소 크롬의 기본 사용자 데이터 폴더인지 (Chrome 136+는 이 폴더로는 원격 연결을 막음)."""
+    local = os.environ.get("LOCALAPPDATA", "")
+    if not local:
+        return False
+    default = Path(local) / "Google" / "Chrome" / "User Data"
+    try:
+        return Path(path).resolve() == default.resolve()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def cdp_alive(port, timeout=0.8):
+    """디버깅 포트로 크롬이 열려 있는지."""
+    import urllib.request
+    try:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        opener.open(f"http://127.0.0.1:{port}/json/version", timeout=timeout).read()
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def launch_chrome(cfg, url="about:blank"):
+    """예약용 크롬을 디버깅 포트로 실행 (이미 열려 있으면 아무것도 안 함). 반환: (Popen 또는 None, 메시지)."""
+    b = cfg["browser"]
+    port = int(b.get("cdp_port", 9222))
+    if cdp_alive(port):
+        return None, f"이미 열려 있는 예약용 크롬이 있습니다 (포트 {port})."
+    path = find_chrome(b.get("chrome_path", ""))
+    if not path:
+        raise RuntimeError("Chrome을 찾지 못했습니다. 고급 설정의 chrome.exe 경로를 넣어주세요.")
+    prof = chrome_profile_path(b)
+    if is_default_chrome_profile(prof):
+        raise RuntimeError("평소 크롬의 기본 프로필(User Data)은 크롬 정책상 연결할 수 없습니다. "
+                           "다른 폴더를 지정하고 그 크롬에서 한 번 로그인해 두세요.")
+    args = [path, f"--remote-debugging-port={port}", f"--user-data-dir={prof}",
+            "--no-first-run", "--no-default-browser-check", "--start-maximized",
+            *b.get("extra_args", []), url]
+    flags = 0
+    if sys.platform == "win32":
+        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+    proc = subprocess.Popen(args, creationflags=flags, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return proc, f"예약용 크롬 실행 (프로필: {prof}, 포트 {port})"
+
+
 def choose_courts(free, want, preferred=(), fallback=True):
     """빈 코트 중 고를 코트 번호 목록.
 
@@ -311,18 +363,8 @@ class Bot:
             self.browser = self.pw.chromium.connect_over_cdp(url, timeout=1500)
             log.info("열려 있는 크롬에 연결 (포트 %d)", port)
         except Exception:  # noqa: BLE001
-            path = find_chrome(b.get("chrome_path", ""))
-            if not path:
-                raise RuntimeError("Chrome을 찾지 못했습니다. config.json의 browser.chrome_path에 chrome.exe 경로를 넣어주세요.")
-            args = [path, f"--remote-debugging-port={port}", f"--user-data-dir={BASE / b['profile_dir']}",
-                    "--no-first-run", "--no-default-browser-check", "--start-maximized",
-                    *b.get("extra_args", []), "about:blank"]
-            flags = 0
-            if sys.platform == "win32":
-                flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-            self.chrome_proc = subprocess.Popen(args, creationflags=flags, stdout=subprocess.DEVNULL,
-                                                stderr=subprocess.DEVNULL)
-            log.info("크롬 실행: %s (예약 전용 프로필)", path)
+            self.chrome_proc, msg = launch_chrome(self.cfg)
+            log.info(msg)
             deadline = time.monotonic() + 40          # 첫 실행(프로필 생성)은 오래 걸릴 수 있음
             while time.monotonic() < deadline and not self.browser:
                 if self.chrome_proc.poll() is not None and self.chrome_proc.returncode != 0:
