@@ -1,8 +1,8 @@
-[장면 1] 부모님을 부양하면 세금이 줄 수 있어요.
+[장면 1] 부모님 부양하면 150만 원 소득공제돼요.
   한글: 거실 소파에서 80대 어머니와 나란히 앉아 웃는 50대 후반 한국인 남성, 위쪽은 밝은 벽과 창문 빛, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean man in his late 50s smiling while sitting beside his mother in her 80s on a living room sofa, plain bright wall and window light in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 2] 연말정산 부양가족 공제예요.
+[장면 2] 조건은 2가지예요.
   한글: 탁자 위에 놓인 서류 봉투와 계산기, 펜, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: envelope of documents, a calculator and a pen on a table, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
@@ -10,24 +10,23 @@
   한글: 공원 산책로를 천천히 함께 걷는 70대 한국인 노부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean elderly couple in their 70s walking slowly together on a park path, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 4] 소득이 기준 이하면 한 분당
+[장면 4] 소득이 기준 이하면 돼요.
   한글: 탁자 위 가계부와 돋보기안경, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: household account book and reading glasses on a table, numbers blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 5] 150만 원을 소득에서 빼 줘요.
-  한글: 계산기를 두드리며 메모하는 60대 한국인 여성의 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: hands of a korean woman in her 60s using a calculator and taking notes, warm natural light, realistic photo, vertical 9:16, no text in image
-
-[장면 6] 만 70세 이상이면 100만 원이 더해져
+[장면 5] 만 70세 이상이면 100만 원이 더해져
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 7] 한 분당 250만 원이 돼요.
+[장면 6] 1명당 250만 원이 돼요.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 8] 표처럼 세율 15%로 계산하면 세금이
+[장면 7] 표처럼 세율 15%면 세금이
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 9] 22만 5천 원, 37만 5천 원 줄어요.
+[장면 8] 150만 원은 22만 5천 원,
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 9] 250만 원은 37만 5천 원 줄어요.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 10] 나이는 그해 마지막 날 기준이에요.
@@ -38,18 +37,22 @@
   한글: 집에서 휴대폰으로 부모님께 전화하며 웃는 50대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean woman in her 50s smiling while calling her parents on a phone at home, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 12] 다만 형제자매 중 한 명만 받을 수 있어요.
+[장면 12] 다만 형제자매 중 1명만 받을 수 있어요.
   한글: 식탁에 둘러앉아 식사하는 50~60대 한국인 형제자매와 80대 부모, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean siblings in their 50s and 60s having a meal with their parents in their 80s around a dining table, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 13] 기준을 넘으면 70세 추가 공제도 안 돼요.
+[장면 13] 기준을 넘으면 추가 100만 원도 안 돼요.
   한글: 탁자 위 서류를 꼼꼼히 확인하는 60대 한국인 남성, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean man in his 60s carefully checking papers on a table, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 14] 소득 기준은 국세청 안내로 꼭 확인하세요.
-  한글: 노트북으로 안내문을 읽는 50대 한국인 부부, 화면은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean couple in their 50s reading a notice on a laptop, screen blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+[장면 14] 기준 금액은 국세청 126에서 확인하세요.
+  한글: 집 식탁에서 유선 전화로 상담 전화를 거는 60대 한국인 남성, 메모지는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s making a phone call at a dining table at home, memo pad blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 15] 개인 상황에 따라 다르니 전문가와 상담하세요.
+[장면 15] 정리하면 150만, 70세 이상 250만 원.
+  한글: 계산기를 두드리며 메모하는 60대 한국인 여성의 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hands of a korean woman in her 60s using a calculator and taking notes, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 16] 개인 상황에 따라 다르니 전문가와 상담하세요.
   한글: 상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean couple in their 60s talking with a counselor at a consultation desk, warm natural light, realistic photo, vertical 9:16, no text in image
