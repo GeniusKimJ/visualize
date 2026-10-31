@@ -24,7 +24,7 @@ from pathlib import Path
 import site_selectors as S
 from notifier import Notifier
 from schedule import (KST, build_targets, calendar_url, rolling_bookable, rolling_plan,
-                      target_week, upcoming_open)
+                      rolling_targets_opening_on, target_week, upcoming_open)
 from timesync import Clock
 
 BASE = Path(__file__).resolve().parent
@@ -53,13 +53,21 @@ def load_config(path):
     cfg.setdefault("max_per_week", 2)
     cfg.setdefault("watch_on_fail", "ask")       # ask | auto | off
     cfg.setdefault("final_wait_min", 10)
-    cfg.setdefault("keepalive_min", 10)
+    cfg.setdefault("keepalive_min", 5)
+    cfg.setdefault("open_window_min", 3)          # 예상 오픈 시각 앞뒤 N분 집중 감시
+    cfg.setdefault("poll_interval_sec", 1.0)      # 집중 감시 간격
+    cfg.setdefault("fast_window_sec", 20)         # 예상 시각 ±이 초 안에서는
+    cfg.setdefault("fast_poll_interval_sec", 0.5) # 더 촘촘하게
+    cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
     cfg.setdefault("max_wait_after_open_min", 30)
     cfg.setdefault("ntp_server", "time.google.com")
     cfg.setdefault("browser", {})
     cfg["browser"].setdefault("channel", "chrome")
     cfg["browser"].setdefault("profile_dir", "chrome_profile")
     cfg["keepalive_min"] = max(5, cfg["keepalive_min"])   # 세션 유지 접근은 5분 이상 간격
+    # 서버 부하 방지: 감시 간격 하한 0.3초
+    cfg["poll_interval_sec"] = max(0.3, float(cfg["poll_interval_sec"]))
+    cfg["fast_poll_interval_sec"] = max(0.3, float(cfg["fast_poll_interval_sec"]))
     return cfg
 
 
@@ -86,6 +94,37 @@ def fmt_dt(dt):
 
 
 TIME_RE = re.compile(r"(\d{1,2}):(\d{2})(\s*[~\-–]\s*\d{1,2}:\d{2})?")
+
+
+CAL_SLOT_RE = r"fn_facilityResSelect\('([^']*)','([^']*)','{ymd}','(\d{{4}})','(\d{{4}})'\)"
+
+
+def parse_calendar(html, d):
+    """달력 HTML에서 d 날짜 상태를 읽는다.
+
+    반환: dict(opened=시간 목록이 그려졌는지, logged_out=로그아웃 상태인지,
+               slots={"1850": "fn_facilityResSelect(...)"} 예약가능한 시간만)
+    """
+    logged_out = "header__links__1__login" in html
+    k = html.find("calendar_table")
+    cal = html[k:] if k >= 0 else html
+    m = re.search(r'<span class="[^"]*">\s*%02d\s*</span>\s*</div>\s*<ul class="yy-list">(.*?)(?=<td|</tr|</tbody)'
+                  % d.day, cal, re.S)
+    opened = bool(m and "<li" in m.group(1))
+    slots = {}
+    for g in re.finditer(CAL_SLOT_RE.format(ymd=d.isoformat()), cal):
+        slots.setdefault(g.group(3), g.group(0))
+    return {"opened": opened, "logged_out": logged_out, "slots": slots}
+
+
+def pick_slot(slots, times):
+    """우선순위 times 중 예약가능한 첫 시간. 반환: ("18:50", "fn_facilityResSelect(...)") 또는 None."""
+    for t in times:
+        h, m = t.split(":")
+        key = f"{int(h):02d}{int(m):02d}"
+        if key in slots:
+            return t, slots[key]
+    return None
 
 
 def fill_date(template, d):
@@ -156,6 +195,10 @@ class Bot:
             executable_path=os.environ.get("AUC_BROWSER_PATH") or None,
         )
         self.ctx.set_default_timeout(10_000)
+        if self.cfg.get("block_images", True):
+            # 이미지/글꼴은 받지 않아 화면 이동을 빠르게 (해당 요청만 가로챔)
+            self.ctx.route(re.compile(r"\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf)(\?.*)?$", re.I),
+                           lambda r: r.abort())
         self.page = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         self.page.on("dialog", self._on_dialog)
         self.ctx.on("page", self._on_new_page)
@@ -192,7 +235,7 @@ class Bot:
         self.page.goto(url, wait_until="domcontentloaded")
         self.last_access = time.monotonic()
 
-    def settle(self, ms=300):
+    def settle(self, ms=50):
         try:
             self.page.wait_for_load_state("domcontentloaded", timeout=5000)
         except Exception:  # noqa: BLE001
@@ -282,6 +325,51 @@ class Bot:
 
     def goto_calendar(self, d):
         self.goto(calendar_url(d, S.CALENDAR_FIRST_OF_MONTH))
+
+    def click_and_wait(self, el, timeout=8000):
+        """클릭 후 화면 이동이 있으면 DOM 로딩까지 기다림. 이동이 없으면(경고창 등) 곧바로 반환."""
+        url = self.page.url
+        el.click()
+        try:
+            self.page.wait_for_url(lambda u: u != url, timeout=timeout, wait_until="domcontentloaded")
+        except Exception:  # noqa: BLE001
+            pass
+        self.settle()
+
+    # ── 가벼운 오픈 확인: 화면은 그대로 두고 달력 HTML만 받음 ──
+    def fetch_calendar(self, d, timeout_ms=3000):
+        """현재 탭(같은 로그인 쿠키)에서 달력 HTML만 받아 parse_calendar 결과 + 응답시간(ms) 반환."""
+        if not self.page.url.startswith("https://www.auc.or.kr"):
+            self.goto_calendar(d)
+        url = calendar_url(d, S.CALENDAR_FIRST_OF_MONTH)
+        t0 = time.monotonic()
+        html = self.page.evaluate("""async ([u, ms]) => {
+            const c = new AbortController(); const t = setTimeout(() => c.abort(), ms);
+            try {
+                const r = await fetch(u, {credentials: 'include', cache: 'no-store', signal: c.signal});
+                return await r.text();
+            } catch (e) { return ''; } finally { clearTimeout(t); }
+        }""", [url, timeout_ms])
+        ms = (time.monotonic() - t0) * 1000
+        if not html:
+            return None, ms
+        return parse_calendar(html, d), ms
+
+    def fast_select(self, onclick_js):
+        """이미 떠 있는 달력 화면에서 사이트의 시간 선택 함수를 그대로 실행 → 코트 선택 화면으로 바로 이동.
+
+        (달력을 다시 불러오는 시간을 아끼기 위함. 버튼을 누르는 것과 같은 요청이다.)
+        """
+        if not self.page.evaluate("typeof fn_facilityResSelect === 'function'"):
+            return False
+        url = self.page.url
+        self.page.evaluate(f"() => {{ {onclick_js}; }}")
+        try:
+            self.page.wait_for_url(lambda u: u != url and "reservationStep2" in u,
+                                   timeout=8000, wait_until="domcontentloaded")
+        except Exception:  # noqa: BLE001
+            return False
+        return True
 
     def date_is_open(self, d):
         cell = self.page.locator(self.date_cell(d))
@@ -419,8 +507,7 @@ class Bot:
                     log.info("'%s'는 최종 버튼으로 판단 → 누르지 않음", label)
                     return True
                 log.info("다음 단계: '%s'", label)
-                loc.first.click()
-                self.settle()
+                self.click_and_wait(loc.first)
                 clicked = True
                 break
             if not clicked:
@@ -443,27 +530,39 @@ class Bot:
         finally:
             self.phase = "auto"
 
-    def try_book(self, tg):
-        """반환: (상태, 설명). 상태 = 성공 | 마감 | 미완료 | 실패"""
+    def try_book(self, tg, fast=None):
+        """반환: (상태, 설명). 상태 = 성공 | 마감 | 미완료 | 실패
+
+        fast = ("18:50", "fn_facilityResSelect(...)") 이면 달력을 다시 열지 않고 바로 선택.
+        """
         self.final_confirm_blocked = False
         self.last_dialog = ""
         self.no_court = False
         self.picked_courts = []
         try:
-            self.open_date(tg.day)
-            if not self.handle_blockers():
-                return "실패", "인증/대기 단계 미처리"
-            slot = self.find_slot(tg.day, tg.times, tg.facilities)
-            if not slot:
-                return "마감", "원하는 시간/코트 없음"
-            t, f, el = slot
-            label = f"{tg.label()} {t} {f}".strip()
-            log.info("슬롯 선택: %s", label)
-            el.click()
-            self.settle()
+            done = False
+            if fast:
+                t0 = time.monotonic()
+                label = f"{tg.label()} {fast[0]}"
+                done = self.fast_select(fast[1])
+                log.info("빠른 선택 %s: %s (%.0fms)", "성공" if done else "실패 → 일반 방식", label,
+                         (time.monotonic() - t0) * 1000)
+            if not done:
+                self.open_date(tg.day)
+                if not self.handle_blockers():
+                    return "실패", "인증/대기 단계 미처리"
+                slot = self.find_slot(tg.day, tg.times, tg.facilities)
+                if not slot:
+                    return "마감", "원하는 시간/코트 없음"
+                t, f, el = slot
+                label = f"{tg.label()} {t} {f}".strip()
+                log.info("슬롯 선택: %s", label)
+                self.click_and_wait(el)
+            t_start = time.monotonic()
             if any(k in self.last_dialog for k in S.UNAVAILABLE_DIALOG_TEXTS):
                 return "마감", self.last_dialog
             ok = self.proceed_to_final()
+            log.info("코트 선택~인원 입력 완료까지 %.0fms", (time.monotonic() - t_start) * 1000)
             if self.no_court:
                 return "마감", label + " (빈 코트 없음)"
             if self.picked_courts:
@@ -488,13 +587,13 @@ def confirm(question, default=True):
     return default if not ans else ans.startswith("y")
 
 
-def book_all(bot, targets, cfg):
+def book_all(bot, targets, cfg, fast_first=None):
     results, booked = [], 0
-    for tg in targets:
+    for i, tg in enumerate(targets):
         if booked >= cfg["max_per_week"]:
-            results.append((tg, "건너뜀", "주간 최대 건수 도달"))
+            results.append((tg, "건너뜀", "최대 건수 도달"))
             continue
-        status, detail = bot.try_book(tg)
+        status, detail = bot.try_book(tg, fast_first if i == 0 else None)
         log.info("결과 %s: %s %s", tg.label(), status, detail)
         results.append((tg, status, detail))
         if status == "성공":
@@ -509,13 +608,18 @@ def report(results, notifier):
     notifier.info(text)
 
 
-def wait_until_open(bot, clock, cfg, open_dt, first_day):
-    """오픈 전 점검 일정 → 오픈 2초 전부터 1초 간격 확인. 열렸으면 True."""
+def wait_until_open(bot, clock, cfg, open_dt, first):
+    """예상 오픈 시각 ±open_window_min 동안 달력 HTML만 가볍게 받아 오픈을 감지.
+
+    반환: (열림 여부, 빠른선택 정보 또는 None)
+    """
+    win = timedelta(minutes=cfg["open_window_min"])
+    start, end = open_dt - win, open_dt + win
     events = [
-        (open_dt - timedelta(minutes=30), "login"),
-        (open_dt - timedelta(minutes=10), "login"),
-        (open_dt - timedelta(minutes=5), "http_sync"),
-        (open_dt - timedelta(minutes=3), "prepare"),
+        (start - timedelta(minutes=30), "login"),
+        (start - timedelta(minutes=10), "login"),
+        (start - timedelta(minutes=5), "time_sync"),
+        (start - timedelta(minutes=1), "prepare"),
     ]
     keep = cfg["keepalive_min"] * 60
     for when, act in events:
@@ -534,34 +638,60 @@ def wait_until_open(bot, clock, cfg, open_dt, first_day):
         if act == "login":
             if not bot.check_login():
                 bot.ensure_login()
-        elif act == "http_sync":
+        elif act == "time_sync":
             clock.sync_ntp(cfg["ntp_server"])
-            clock.sync_http(S.SERVER_TIME_URL)
+            clock.sync_http(S.SERVER_TIME_URL, S.SERVER_TIME_PRECISE_URL)
         elif act == "prepare":
             if not bot.check_login():
-                bot.ensure_login(wait_min=2)
-            bot.goto_calendar(first_day)
+                bot.ensure_login(wait_min=1)
+            bot.goto_calendar(first.day)       # 이 화면에서 바로 시간 선택 함수를 실행함
 
-    clock.sleep_until(open_dt - timedelta(seconds=2))
-    log.info("오픈 확인 시작 (기준 시계: %s, offset %+.3f초)", clock.source, clock.offset)
-    interval, slowed = 1.0, False
+    if clock.now() < start:
+        clock.sleep_until(start)
+    if not bot.page.url.startswith("https://www.auc.or.kr"):
+        bot.goto_calendar(first.day)
+    log.info("집중 감시 시작: %s ~ %s (기준 시계 %s, offset %+.3f초)",
+             start.strftime("%H:%M:%S"), end.strftime("%H:%M:%S"), clock.source, clock.offset)
+
+    fast_win = cfg["fast_window_sec"]
+    n, ms_sum, last_log, slowed = 0, 0.0, time.monotonic(), False
     while True:
         t0 = time.monotonic()
+        now = clock.now()
+        near = abs((now - open_dt).total_seconds()) <= fast_win
         try:
-            bot.goto_calendar(first_day)
-            bot.handle_blockers()
-            if bot.date_is_open(first_day):
-                log.info("★ 예약 오픈 확인 (%s)", clock.now().strftime("%H:%M:%S.%f")[:-3])
-                return True
+            st, ms = bot.fetch_calendar(first.day)
+            n += 1
+            ms_sum += ms
+            if st is None:
+                log.warning("달력 응답 없음 (%.0fms)", ms)
+            elif st["logged_out"]:
+                bot.n.alert("감시 중 로그아웃됨! 다시 로그인해주세요.")
+                bot.ensure_login(wait_min=3)
+                bot.goto_calendar(first.day)
+            elif st["opened"]:
+                pick = pick_slot(st["slots"], first.times)
+                log.info("★ 오픈 감지 %s (서버시각 기준, 응답 %.0fms) / 예약가능 %s → %s",
+                         clock.now().strftime("%H:%M:%S.%f")[:-3], ms,
+                         sorted(st["slots"]) or "없음", pick[0] if pick else "원하는 시간 없음")
+                return True, pick
+            # 화면 쪽 자동로그아웃 타이머 대비: 집중 구간이 아닐 때 4분마다 달력 화면 새로고침
+            if not near and time.monotonic() - bot.last_access > 240:
+                bot.goto_calendar(first.day)
         except Exception as e:  # noqa: BLE001
             log.warning("오픈 확인 중 오류: %s", e)
-        elapsed = (clock.now() - open_dt).total_seconds()
-        if elapsed > 180 and not slowed:
-            interval, slowed = 5.0, True
-            bot.n.alert("오픈 3분이 지나도 열리지 않습니다. 오픈 시각 설정이나 DATE_CELL 셀렉터를 확인해주세요.")
-        if elapsed > cfg["max_wait_after_open_min"] * 60:
+
+        if time.monotonic() - last_log > 30:
+            log.info("아직 안 열림 (%d회 확인, 평균 응답 %.0fms)", n, ms_sum / max(n, 1))
+            last_log = time.monotonic()
+        past = (clock.now() - open_dt).total_seconds()
+        if clock.now() > end and not slowed:
+            slowed = True
+            bot.n.alert(f"예상 시각 ±{cfg['open_window_min']}분이 지나도 안 열렸습니다. 5초 간격으로 계속 확인합니다.")
+        if past > cfg["max_wait_after_open_min"] * 60:
             bot.n.alert("오픈 대기 시간을 초과해 중단합니다.")
-            return False
+            return False, None
+        interval = 5.0 if slowed else (cfg["fast_poll_interval_sec"] if near else cfg["poll_interval_sec"])
         time.sleep(max(0.0, interval - (time.monotonic() - t0)))
 
 
@@ -614,7 +744,7 @@ def cmd_inspect(bot, first_day):
 
 def cmd_check(bot, clock, cfg, targets):
     clock.sync_ntp(cfg["ntp_server"])
-    clock.sync_http(S.SERVER_TIME_URL)
+    clock.sync_http(S.SERVER_TIME_URL, S.SERVER_TIME_PRECISE_URL)
     logged = bot.check_login()
     rows = [("로그인 상태(LOGGED_IN_MARKER)", "유지됨" if logged else "로그아웃")]
     if targets:
@@ -635,6 +765,16 @@ def cmd_check(bot, clock, cfg, targets):
                 pass
         slot = bot.find_slot(d, targets[0].times, targets[0].facilities)
         rows.append(("목표 시간 예약가능", f"{slot[0]} {slot[1]}".strip() if slot else "없음"))
+        lat = []
+        st = None
+        for _ in range(3):
+            st, ms = bot.fetch_calendar(d)
+            lat.append(ms)
+            time.sleep(1)
+        rows.append(("가벼운 확인 응답시간", " / ".join(f"{x:.0f}ms" for x in lat)))
+        if st:
+            rows.append(("가벼운 확인: 열림 / 로그아웃", f"{st['opened']} / {st['logged_out']}"))
+            rows.append(("가벼운 확인: 예약가능 시간", sorted(st["slots"]) or "없음"))
         rows.append(("인증/대기 감지", bot.find_blocker() or "없음"))
     print("\n[점검 결과]")
     for k, v in rows:
@@ -643,20 +783,23 @@ def cmd_check(bot, clock, cfg, targets):
 
 
 def dry_run(open_dt, cfg):
+    win = timedelta(minutes=cfg["open_window_min"])
+    fw = cfg["fast_window_sec"]
     print("[dry-run] 예정된 동작 (브라우저 실행 안 함)")
     plan = [
-        (open_dt - timedelta(minutes=40), "스크립트 시작, 로그인 확인 (필요 시 알림)"),
-        (open_dt - timedelta(minutes=30), "로그인 점검"),
-        (open_dt - timedelta(minutes=10), "로그인 점검"),
-        (open_dt - timedelta(minutes=5), "NTP + 서버 시간 보정"),
-        (open_dt - timedelta(minutes=3), "로그인 점검 + 첫 목표 날짜 달력 열기"),
-        (open_dt - timedelta(seconds=2), "1초 간격 새로고침으로 오픈 확인 시작"),
-        (open_dt + timedelta(minutes=3), "아직 안 열렸으면 5초 간격 + 알림"),
+        (open_dt - win - timedelta(minutes=30), "로그인 점검"),
+        (open_dt - win - timedelta(minutes=10), "로그인 점검"),
+        (open_dt - win - timedelta(minutes=5), "NTP + 서버 시간 정밀 보정"),
+        (open_dt - win - timedelta(minutes=1), "로그인 점검 + 목표 날짜 달력 열어 두기"),
+        (open_dt - win, f"집중 감시 시작: 달력 HTML만 {cfg['poll_interval_sec']}초 간격으로 확인"),
+        (open_dt - timedelta(seconds=fw), f"예상 시각 ±{fw}초: {cfg['fast_poll_interval_sec']}초 간격"),
+        (open_dt, "예상 오픈 시각"),
+        (open_dt + win, "집중 감시 끝 → 안 열렸으면 5초 간격 + 알림"),
         (open_dt + timedelta(minutes=cfg["max_wait_after_open_min"]), "대기 중단"),
     ]
     for when, what in plan:
         print(f"  {fmt_dt(when)}  {what}")
-    print(f"  세션 유지 점검: {cfg['keepalive_min']}분 간격 / 최종 신청 대기: {cfg['final_wait_min']}분")
+    print("  열림 감지 즉시: 떠 있는 달력에서 시간 선택 → 코트 선택 → 인원 입력 → [예약하기] 직전 알림")
 
 
 def main():
@@ -666,6 +809,7 @@ def main():
         g.add_argument(f"--{m}", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="브라우저 없이 계산/일정만 출력")
     ap.add_argument("--yes", action="store_true", help="목표 확인 질문 생략 (작업 스케줄러용)")
+    ap.add_argument("--open-at", help='예상 오픈 일시 직접 지정. 예: "2026-11-01 15:00"')
     ap.add_argument("--config", default=str(BASE / "config.json"))
     args = ap.parse_args()
 
@@ -677,11 +821,20 @@ def main():
 
     now = datetime.now(KST)
     open_dt, targets = make_plan(cfg, now)
+    if args.open_at:
+        open_dt = datetime.strptime(args.open_at.strip(), "%Y-%m-%d %H:%M").replace(tzinfo=KST)
+        if cfg["open_mode"] == "weekly":
+            targets = build_targets(cfg, open_dt)
+        else:
+            targets = rolling_targets_opening_on(cfg, open_dt.date(), now)
     if args.watch and cfg["open_mode"] == "rolling":
         targets = rolling_bookable(cfg, now)
         print("[감시 대상] 이미 열려 있는 목표 날짜: " + (", ".join(t.label() for t in targets) or "없음"))
     else:
         print_plan(open_dt, targets, cfg)
+        if args.open_at:
+            print(" ※ 예상 오픈 시각 직접 지정 (--open-at). 위 날짜가 비어 있으면 그날 열리는 날짜를"
+                  " target_days / extra_dates에 넣으세요.\n")
 
     if args.dry_run:
         if args.open and open_dt:
@@ -717,10 +870,10 @@ def main():
         elif args.open:
             clock.sync_ntp(cfg["ntp_server"])
             bot.ensure_login(wait_min=15)
-            opened = True
-            if clock.now() < open_dt:
-                opened = wait_until_open(bot, clock, cfg, open_dt, targets[0].day)
-            results, booked = book_all(bot, targets, cfg) if opened else ([], 0)
+            opened, fast = True, None
+            if clock.now() < open_dt + timedelta(minutes=cfg["open_window_min"]):
+                opened, fast = wait_until_open(bot, clock, cfg, open_dt, targets[0])
+            results, booked = book_all(bot, targets, cfg, fast) if opened else ([], 0)
             if results:
                 report(results, notifier)
             if booked < cfg["max_per_week"]:

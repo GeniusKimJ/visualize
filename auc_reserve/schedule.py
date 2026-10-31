@@ -142,3 +142,10 @@ def rolling_bookable(cfg, now):
     """이미 열려 있고 아직 이용일이 지나지 않은 목표 날짜 (빈자리 감시용)."""
     n = int(cfg.get("open_days_before", 7))
     return [t for t in _candidates(cfg, now.date(), n + 1) if rolling_open_of(t.day, cfg) <= now]
+
+
+def rolling_targets_opening_on(cfg, open_date, now):
+    """open_date에 열리는 목표 날짜 (수동 오픈 시각 지정 --open-at 용)."""
+    n = int(cfg.get("open_days_before", 7))
+    return [t for t in _candidates(cfg, now.date(), n + 21)
+            if t.day - timedelta(days=n) == open_date]

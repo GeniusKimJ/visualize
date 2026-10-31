@@ -10,6 +10,7 @@ Playwright 셀렉터 문법: CSS, 'a:has-text("로그아웃")', 'text=예약' �
 MAIN_URL = "https://www.auc.or.kr/reservation/main/view"
 LOGIN_URL = "https://www.auc.or.kr/sign/in/base/user?menuLevel=2&menuNo=346"
 SERVER_TIME_URL = "https://www.auc.or.kr/"
+SERVER_TIME_PRECISE_URL = "https://www.auc.or.kr/robots.txt"   # 작은 파일로 초 경계 측정
 
 # 달력 URL의 yearMonthDay를 그 달 1일로 넣을지(True), 목표 날짜 그대로 넣을지(False)
 CALENDAR_FIRST_OF_MONTH = True

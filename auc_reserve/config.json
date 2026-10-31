@@ -2,6 +2,10 @@
   "open_mode": "rolling",
   "open_days_before": 7,
   "open_time": "15:00:00",
+  "open_window_min": 3,
+  "poll_interval_sec": 1.0,
+  "fast_window_sec": 20,
+  "fast_poll_interval_sec": 0.5,
   "open_weekday": "SUN",
 
   "target_days": [
@@ -22,8 +26,9 @@
 
   "watch_on_fail": "ask",
   "final_wait_min": 10,
-  "keepalive_min": 10,
+  "keepalive_min": 5,
   "max_wait_after_open_min": 30,
   "ntp_server": "time.google.com",
+  "block_images": true,
   "browser": { "channel": "chrome", "profile_dir": "chrome_profile" }
 }
