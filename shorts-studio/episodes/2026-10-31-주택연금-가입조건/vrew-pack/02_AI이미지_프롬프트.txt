@@ -1,4 +1,4 @@
-[장면 1] 내 집에 살면서 매달 연금 받는 법, 아세요?
+[장면 1] 내 집으로 매달 연금, 기본 조건 2가지예요.
   한글: 거실 소파에 나란히 앉아 웃고 있는 60대 한국인 부부, 위쪽은 밝고 단순한 벽, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean couple in their 60s smiling side by side on a living room sofa, plain bright wall in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
 
@@ -6,60 +6,52 @@
   한글: 단정한 아파트 단지를 바라보는 60대 한국인 부부의 뒷모습, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: back view of a korean couple in their 60s looking at a tidy apartment complex, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 3] 집을 담보로 맡기고
-  한글: 탁자 위 집 열쇠를 상대에게 건네는 손, 부드러운 배경, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: hand passing a house key across a table, soft background, warm natural light, realistic photo, vertical 9:16, no text in image
-
-[장면 4] 그 집에 계속 살면서 연금을 받아요.
+[장면 3] 집을 담보로 맡기고 그 집에 계속 살아요.
   한글: 익숙한 집 부엌에서 차를 마시는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean couple in their 60s drinking tea in their own familiar kitchen, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 5] 종신 방식이면 평생 받을 수 있어요.
+[장면 4] 종신 방식이면 평생 받아요.
   한글: 공원 산책로를 함께 걷는 70대 한국인 노부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean elderly couple in their 70s walking together on a park trail, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 6] 기본 조건 두 가지만 볼게요.
+[장면 5] 1번, 부부 중 1명이 만 55세 이상.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 7] 부부 중 한 명이 만 55세 이상이고
+[장면 6] 남편 50세, 아내 55세여도 돼요.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 8] 부부가 가진 집의 공시가격을 합쳐
+[장면 7] 2번, 부부 집 공시가격 합쳐 12억 이하.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 9] 12억 원 이하면 돼요.
+[장면 8] 시세가 아닌 공시가격 기준이에요.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 10] 시세가 아니라 공시가격 기준이에요.
+[장면 9] 2채 합쳐 12억 원을 넘어도
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 11] 주거용 오피스텔도 가능해요.
+[장면 10] 3년 안에 1채 파는 조건으로 돼요.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 12] 알아 둘 점도 있어요.
-  한글: 창밖을 보며 생각에 잠긴 60대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean man in his 60s looking out the window, deep in thought, warm natural light, realistic photo, vertical 9:16, no text in image
-
-[장면 13] 받는 돈은 가입할 때 집값과
+[장면 11] 받는 돈은 가입할 때 3가지를 봐요.
   한글: 작은 집 모형 옆에 놓인 저울, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: balance scale placed next to a small house model, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 14] 나이 등으로 정해져요.
-  한글: 벽걸이 달력 앞에서 이야기하는 60대 한국인 부부, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean couple in their 60s talking in front of a wall calendar, numbers blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+[장면 12] 집값, 나이, 이자율이에요.
+  한글: 탁자 위 계산기와 서류를 보는 60대 한국인 부부의 손, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hands of a korean couple in their 60s over papers and a calculator, numbers blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 15] 보증료라는 비용도 들어요.
+[장면 13] 보증료는 처음 1번, 이후 매달 붙어요.
   한글: 탁자 위 지갑과 영수증, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: wallet and receipts on a table, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 16] 기준은 바뀔 수 있으니
-  한글: 손으로 넘기는 서류 묶음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: hand flipping through a stack of documents, warm natural light, realistic photo, vertical 9:16, no text in image
-
-[장면 17] 가입 조건은 공식 안내에서 확인하세요.
+[장면 14] 기준은 바뀔 수 있으니 공식 안내 확인하세요.
   한글: 스마트폰으로 함께 검색하는 60대 한국인 부부, 화면은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean couple in their 60s searching together on a smartphone, screen blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 18] 개인 상황에 따라 다르니 전문가와 상담하세요.
+[장면 15] 정리하면 만 55세, 12억 원 이하예요.
+  한글: 집 앞에서 함께 웃는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s smiling together in front of their home, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 16] 개인 상황에 따라 다르니 전문가와 상담하세요.
   한글: 상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean couple in their 60s talking with a counselor at a desk, warm natural light, realistic photo, vertical 9:16, no text in image
