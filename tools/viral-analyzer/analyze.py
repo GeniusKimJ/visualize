@@ -47,14 +47,32 @@ def video_id(url):
     return m.group(1) if m else None
 
 
+class RateLimited(Exception):
+    pass
+
+
+class _NoSorryRedirect(urllib.request.HTTPRedirectHandler):
+    """YouTube가 요청 과다로 google.com/sorry(캡차)로 돌리면 즉시 알린다."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if "google.com/sorry" in newurl:
+            raise RateLimited("YouTube 요청 제한(캡차 페이지). 30분~수 시간 뒤 다시 시도하거나 transcripts/에 자막을 직접 넣으세요.")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(_NoSorryRedirect)
+
+
 def fetch_page(vid, tries=4):
     req = urllib.request.Request(
         f"https://www.youtube.com/watch?v={vid}",
         headers={"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"})
     for i in range(tries):
         try:
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with _OPENER.open(req, timeout=30) as r:
                 return r.read().decode("utf-8", "replace")
+        except RateLimited:
+            raise
         except Exception:  # noqa: BLE001  일시적 차단·네트워크 오류 → 2, 4, 8초 후 재시도
             if i == tries - 1:
                 raise
