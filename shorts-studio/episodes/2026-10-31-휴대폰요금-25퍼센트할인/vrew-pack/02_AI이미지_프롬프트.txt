@@ -14,16 +14,16 @@
   한글: 탁자 위 종이 요금 고지서와 계산기, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: a paper phone bill and a calculator on a table, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 5] 표를 보시면 월 5만 원 요금은
+[장면 5] 표처럼 월 5만 원이 3만 7,500원,
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 6] 매달 1만 2,500원이 할인돼요.
+[장면 6] 매달 1만 2,500원씩 덜 내요.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 7] 1년이면 15만 원을 아끼는 셈이에요.
+[장면 7] 1년 15만 원, 부부 2대면 30만 원.
   숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
-[장면 8] 새 휴대폰을 살 때만 되는 게 아니에요.
+[장면 8] 새 폰 말고도 3가지 경우에 돼요.
   한글: 상표 없는 휴대폰 진열대 앞에서 고민하는 50대 한국인 남성, 간판·로고 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean man in his 50s thinking in front of an unbranded phone display shelf, no signs or logos, warm natural light, realistic photo, vertical 9:16, no text in image
 
@@ -43,17 +43,17 @@
   한글: 탁자에서 서류를 꼼꼼히 읽는 50대 한국인 여성, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean woman in her 50s carefully reading papers at a table, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 13] 신청은 가입한 통신사 고객센터나
+[장면 13] 가입한 통신사 고객센터나 대리점에
   한글: 거실에서 휴대폰으로 전화하는 60대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean woman in her 60s making a phone call in her living room, warm natural light, realistic photo, vertical 9:16, no text in image
 
-[장면 14] 대리점, 누리집에서 하면 돼요.
-  한글: 노트북 화면을 함께 보는 50대 한국인 부부, 화면은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean couple in their 50s looking at a laptop screen together, screen blurred, warm natural light, realistic photo, vertical 9:16, no text in image
-
-[장면 15] 내 휴대폰도 되는지 꼭 물어보세요.
+[장면 14] 내 폰도 되는지 묻고 신청하세요.
   한글: 휴대폰을 들고 고개를 끄덕이는 60대 한국인 남성, 밝은 배경, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
   영문: korean man in his 60s holding a smartphone and nodding, bright background, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 15] 월 5만 원이면 1년 15만 원 아껴요.
+  한글: 탁자 위 계산기와 지갑 옆에서 서로 보며 웃는 60대 한국인 부부, 숫자·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s smiling at each other next to a calculator and a wallet on a table, no numbers or text, warm natural light, realistic photo, vertical 9:16, no text in image
 
 [장면 16] 개인 상황마다 다르니 통신사에서 확인하세요.
   한글: 상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 로고 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
