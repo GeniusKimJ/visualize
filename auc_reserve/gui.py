@@ -19,18 +19,15 @@ import main as core
 from schedule import KST, WEEKDAY_KO
 
 WEEKDAY_KEYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+# 호계체육관 배드민턴장 시간표 (월~토 / 일·공휴일)
+WEEK_TIMES = ["09:00", "10:40", "12:20", "13:55", "15:30", "17:10", "18:50", "20:30"]
+SUN_TIMES = ["09:00", "10:30", "12:00", "13:30", "15:00", "16:30"]
+
+
+def slot_times(weekday_index):
+    return SUN_TIMES if weekday_index == 6 else WEEK_TIMES
 TIME_RE = re.compile(r"^\d{1,2}:\d{2}$")
-DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 FONT = ("맑은 고딕", 10)
-
-
-def parse_times(text):
-    """'18:50, 20:30' → ['18:50', '20:30'] (형식이 틀리면 ValueError)."""
-    items = [x.strip() for x in re.split(r"[,\s]+", text) if x.strip()]
-    for x in items:
-        if not TIME_RE.match(x):
-            raise ValueError(f"시간 형식이 아닙니다: {x} (예: 18:50)")
-    return items
 
 
 class QueueLogHandler(logging.Handler):
@@ -41,6 +38,49 @@ class QueueLogHandler(logging.Handler):
 
     def emit(self, record):
         self.q.put(("log", self.format(record), record.levelno))
+
+
+class TimePicker:
+    """시간 체크박스 묶음. 체크한 순서가 우선순위가 되고, 칸 옆에 1·2·3 번호를 보여 준다."""
+
+    def __init__(self, parent, times, row, col0, on_change=None):
+        self.times = list(times)
+        self.order = []
+        self.vars, self.texts, self.boxes = {}, {}, {}
+        self.on_change = on_change
+        for j, t in enumerate(self.times):
+            v, txt = tk.IntVar(value=0), tk.StringVar(value="  ")
+            cb = ttk.Checkbutton(parent, variable=v, textvariable=txt, width=3,
+                                 command=lambda t=t: self.toggle(t))
+            cb.grid(row=row, column=col0 + j, padx=2, pady=1)
+            self.vars[t], self.texts[t], self.boxes[t] = v, txt, cb
+
+    def toggle(self, t):
+        if self.vars[t].get():
+            if t not in self.order:
+                self.order.append(t)
+        elif t in self.order:
+            self.order.remove(t)
+        self.refresh()
+        if self.on_change:
+            self.on_change()
+
+    def set(self, times):
+        self.order = [t for t in times if t in self.vars]
+        self.refresh()
+
+    def refresh(self):
+        for t in self.times:
+            on = t in self.order
+            self.vars[t].set(1 if on else 0)
+            self.texts[t].set(str(self.order.index(t) + 1) if on else "  ")
+
+    def clear(self):
+        self.set([])
+
+    def destroy(self):
+        for cb in self.boxes.values():
+            cb.destroy()
 
 
 class App:
@@ -55,8 +95,8 @@ class App:
         self.env_path = core.BASE / ".env"
 
         root.title("배드민턴장 예약 도우미 (안양도시공사 호계체육관)")
-        root.geometry("900x800")
-        root.minsize(820, 640)
+        root.geometry("960x900")
+        root.minsize(900, 760)
         style = ttk.Style()
         try:
             style.theme_use("vista" if sys.platform == "win32" else "clam")
@@ -124,33 +164,54 @@ class App:
 
     def build_main_tab(self, parent):
         f = ttk.Frame(parent, padding=10)
+        small = ("맑은 고딕", 8)
 
-        days = ttk.LabelFrame(f, text=" 매주 예약할 요일과 시간 (앞쪽 시간이 우선) ", padding=8)
-        days.grid(row=0, column=0, rowspan=2, sticky="nsew", padx=(0, 10))
-        self.day_on, self.day_times = {}, {}
-        for i, wd in enumerate(WEEKDAY_KEYS):
-            self.day_on[wd] = tk.BooleanVar()
-            self.day_times[wd] = tk.StringVar()
-            ttk.Checkbutton(days, text=WEEKDAY_KO[i] + "요일", variable=self.day_on[wd]).grid(
-                row=i, column=0, sticky="w", pady=2)
-            ttk.Entry(days, textvariable=self.day_times[wd], width=22).grid(row=i, column=1, padx=6)
-        ttk.Label(days, text="예) 18:50, 20:30   (평일 09:00 10:40 12:20 13:55 15:30 17:10 18:50 20:30\n"
-                             "      일요일 09:00 10:30 12:00 13:30 15:00 16:30)",
-                  foreground="#666", font=("맑은 고딕", 8)).grid(row=7, column=0, columnspan=2, sticky="w",
-                                                              pady=(6, 0))
+        # ── 매주 반복: 요일 × 시간 체크표 ──
+        days = ttk.LabelFrame(f, text=" 매주 예약할 요일과 시간 — 체크한 순서가 우선순위 (1 → 2 → …) ", padding=8)
+        days.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        for j, t in enumerate(WEEK_TIMES):
+            ttk.Label(days, text=t, font=("맑은 고딕", 9, "bold")).grid(row=0, column=1 + j, padx=2)
+        self.day_pick = {}
+        for i, wd in enumerate(WEEKDAY_KEYS[:6]):
+            ttk.Label(days, text=WEEKDAY_KO[i] + "요일").grid(row=1 + i, column=0, sticky="w", padx=(0, 8))
+            self.day_pick[wd] = TimePicker(days, WEEK_TIMES, 1 + i, 1)
+        for j, t in enumerate(SUN_TIMES):
+            ttk.Label(days, text=t, font=("맑은 고딕", 9, "bold"), foreground="#c0392b").grid(
+                row=7, column=1 + j, padx=2, pady=(6, 0))
+        ttk.Label(days, text="일요일", foreground="#c0392b").grid(row=8, column=0, sticky="w")
+        self.day_pick["SUN"] = TimePicker(days, SUN_TIMES, 8, 1)
+        ttk.Button(days, text="전체 해제", command=lambda: [p.clear() for p in self.day_pick.values()]).grid(
+            row=8, column=7, columnspan=2, sticky="e")
 
-        ex = ttk.LabelFrame(f, text=" 특정 날짜 (한 줄에 하나: 날짜 시간,시간) ", padding=8)
-        ex.grid(row=0, column=1, sticky="nsew")
-        self.extra_box = tk.Text(ex, height=4, width=34, font=FONT)
-        self.extra_box.pack(fill="both", expand=True)
-        ttk.Label(ex, text="예) 2026-11-14 10:40, 12:20", foreground="#666",
-                  font=("맑은 고딕", 8)).pack(anchor="w")
+        # ── 특정 날짜 ──
+        ex = ttk.LabelFrame(f, text=" 특정 날짜 추가 ", padding=8)
+        ex.grid(row=1, column=0, sticky="nsew", pady=(8, 0), padx=(0, 8))
+        top = ttk.Frame(ex)
+        top.pack(fill="x")
+        ttk.Label(top, text="날짜").pack(side="left")
+        self.ex_date = tk.StringVar()
+        ttk.Entry(top, textvariable=self.ex_date, width=12).pack(side="left", padx=4)
+        self.ex_wd = ttk.Label(top, text="예) 2026-11-14", foreground="#666", font=small)
+        self.ex_wd.pack(side="left")
+        self.ex_times_frame = ttk.Frame(ex)
+        self.ex_times_frame.pack(fill="x", pady=4)
+        self.ex_pick = None
+        self.ex_date.trace_add("write", lambda *_: self.on_ex_date())
+        btns = ttk.Frame(ex)
+        btns.pack(fill="x")
+        ttk.Button(btns, text="추가", command=self.add_extra).pack(side="left")
+        ttk.Button(btns, text="선택 삭제", command=self.del_extra).pack(side="left", padx=4)
+        self.extra_list = tk.Listbox(ex, height=4, font=FONT)
+        self.extra_list.pack(fill="both", expand=True, pady=(4, 0))
+        self.extras = []
         row = ttk.Frame(ex)
         row.pack(fill="x", pady=(6, 0))
         ttk.Label(row, text="건너뛸 날짜").pack(side="left")
         self.skip_var = tk.StringVar()
-        ttk.Entry(row, textvariable=self.skip_var, width=26).pack(side="left", padx=6)
+        ttk.Entry(row, textvariable=self.skip_var, width=24).pack(side="left", padx=4)
+        ttk.Label(row, text="쉼표로 구분", foreground="#666", font=small).pack(side="left")
 
+        # ── 코트 / 인원 / 제출 ──
         ct = ttk.LabelFrame(f, text=" 코트 / 인원 / 제출 ", padding=8)
         ct.grid(row=1, column=1, sticky="nsew", pady=(8, 0))
         self.courts_var = tk.StringVar()
@@ -160,17 +221,16 @@ class App:
         self.auto_submit = tk.BooleanVar(value=True)
         self.max_per = tk.StringVar(value="1")
         ttk.Label(ct, text="원하는 코트").grid(row=0, column=0, sticky="w")
-        ttk.Entry(ct, textvariable=self.courts_var, width=12).grid(row=0, column=1, sticky="w", padx=4)
-        ttk.Label(ct, text="빈칸 = 연번 자동, 예) 6,7", foreground="#666",
-                  font=("맑은 고딕", 8)).grid(row=0, column=2, sticky="w")
+        ttk.Entry(ct, textvariable=self.courts_var, width=10).grid(row=0, column=1, sticky="w", padx=4)
+        ttk.Label(ct, text="빈칸 = 연번 자동, 예) 6,7", foreground="#666", font=small).grid(
+            row=0, column=2, sticky="w")
         ttk.Label(ct, text="코트 수").grid(row=1, column=0, sticky="w", pady=3)
         ttk.Combobox(ct, textvariable=self.court_count, values=["1", "2"], width=4, state="readonly").grid(
             row=1, column=1, sticky="w", padx=4)
         ttk.Label(ct, text="사용인원").grid(row=2, column=0, sticky="w")
         ttk.Spinbox(ct, textvariable=self.people, from_=2, to=12, width=5).grid(row=2, column=1, sticky="w",
                                                                               padx=4)
-        ttk.Label(ct, text="코트 수×2 ~ ×6명", foreground="#666", font=("맑은 고딕", 8)).grid(
-            row=2, column=2, sticky="w")
+        ttk.Label(ct, text="코트 수×2 ~ ×6명", foreground="#666", font=small).grid(row=2, column=2, sticky="w")
         ttk.Label(ct, text="최대 예약 건수").grid(row=3, column=0, sticky="w", pady=3)
         ttk.Spinbox(ct, textvariable=self.max_per, from_=1, to=2, width=5).grid(row=3, column=1, sticky="w",
                                                                               padx=4)
@@ -179,8 +239,54 @@ class App:
         ttk.Checkbutton(ct, text="[예약하기] → [예]까지 자동 (끄면 직전에서 멈춤)", variable=self.auto_submit).grid(
             row=5, column=0, columnspan=3, sticky="w")
 
+        f.columnconfigure(0, weight=1)
         f.columnconfigure(1, weight=1)
         return f
+
+    # ── 특정 날짜: 날짜 입력 → 그 요일 시간표 체크 → 추가 ──
+    def on_ex_date(self):
+        if self.ex_pick:
+            self.ex_pick.destroy()
+            self.ex_pick = None
+        for w in self.ex_times_frame.winfo_children():
+            w.destroy()
+        s = self.ex_date.get().strip()
+        try:
+            d = datetime.strptime(s, "%Y-%m-%d").date()
+        except ValueError:
+            self.ex_wd.configure(text="예) 2026-11-14")
+            return
+        self.ex_wd.configure(text=f"({WEEKDAY_KO[d.weekday()]})  시간을 체크하세요")
+        times = slot_times(d.weekday())
+        for j, t in enumerate(times):
+            ttk.Label(self.ex_times_frame, text=t, font=("맑은 고딕", 8, "bold")).grid(row=0, column=j, padx=2)
+        self.ex_pick = TimePicker(self.ex_times_frame, times, 1, 0)
+
+    def add_extra(self):
+        s = self.ex_date.get().strip()
+        try:
+            d = datetime.strptime(s, "%Y-%m-%d").date()
+        except ValueError:
+            messagebox.showwarning("입력 확인", "날짜를 2026-11-14 형식으로 입력하세요.")
+            return
+        if not self.ex_pick or not self.ex_pick.order:
+            messagebox.showwarning("입력 확인", "시간을 하나 이상 체크하세요.")
+            return
+        self.extras = [e for e in self.extras if e["date"] != s] + [{"date": s, "times": list(self.ex_pick.order)}]
+        self.extras.sort(key=lambda e: e["date"])
+        self.show_extras()
+        self.ex_date.set("")
+
+    def del_extra(self):
+        for i in reversed(self.extra_list.curselection()):
+            del self.extras[i]
+        self.show_extras()
+
+    def show_extras(self):
+        self.extra_list.delete(0, "end")
+        for e in self.extras:
+            d = datetime.strptime(e["date"], "%Y-%m-%d").date()
+            self.extra_list.insert("end", f'{e["date"]}({WEEKDAY_KO[d.weekday()]})   {" → ".join(e["times"])}')
 
     def build_adv_tab(self, parent):
         f = ttk.Frame(parent, padding=10)
@@ -225,16 +331,13 @@ class App:
         c = self.cfg
         days = {td["weekday"].upper(): td for td in c.get("target_days", [])}
         for wd in WEEKDAY_KEYS:
-            self.day_on[wd].set(wd in days)
-            self.day_times[wd].set(", ".join(days.get(wd, {}).get("times", [])))
-        lines = []
+            self.day_pick[wd].set(days.get(wd, {}).get("times", []))
+        self.extras = []
         for ex in c.get("extra_dates", []):
             if isinstance(ex, str):
-                lines.append(ex)
-            else:
-                lines.append(f'{ex["date"]} {", ".join(ex.get("times", []))}'.strip())
-        self.extra_box.delete("1.0", "end")
-        self.extra_box.insert("1.0", "\n".join(lines))
+                ex = {"date": ex, "times": list(c.get("default_times", []))}
+            self.extras.append({"date": ex["date"], "times": list(ex.get("times", []))})
+        self.show_extras()
         self.skip_var.set(", ".join(c.get("skip_dates", [])))
         self.courts_var.set(",".join(str(x) for x in c.get("courts", [])))
         self.court_count.set(str(c.get("court_count", 2)))
@@ -258,24 +361,11 @@ class App:
         c = dict(self.cfg)
         c["open_mode"] = c.get("open_mode", "rolling")
         c["target_days"] = []
-        for i, wd in enumerate(WEEKDAY_KEYS):
-            if self.day_on[wd].get():
-                times = parse_times(self.day_times[wd].get())
-                if not times:
-                    raise ValueError(f"{WEEKDAY_KO[i]}요일 시간을 입력하세요.")
-                c["target_days"].append({"weekday": wd, "times": times, "facilities": []})
-        extras = []
-        for line in self.extra_box.get("1.0", "end").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            date_s, _, rest = line.partition(" ")
-            if not DATE_RE.match(date_s):
-                raise ValueError(f"날짜 형식이 아닙니다: {date_s} (예: 2026-11-14)")
-            datetime.strptime(date_s, "%Y-%m-%d")
-            times = parse_times(rest)
-            extras.append({"date": date_s, "times": times} if times else date_s)
-        c["extra_dates"] = extras
+        for wd in WEEKDAY_KEYS:
+            if self.day_pick[wd].order:
+                c["target_days"].append({"weekday": wd, "times": list(self.day_pick[wd].order),
+                                         "facilities": []})
+        c["extra_dates"] = [dict(e) for e in self.extras if e["times"]]
         skips = [x.strip() for x in self.skip_var.get().split(",") if x.strip()]
         for x in skips:
             datetime.strptime(x, "%Y-%m-%d")
