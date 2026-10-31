@@ -43,7 +43,10 @@ UNAVAILABLE_DIALOG_TEXTS = ["마감", "이미 예약", "초과", "불가"]
 # 코트 선택과 인원 입력은 브라우저 안에서만 처리되고 서버에 아무것도 잡히지 않는다.
 # 실제 예약은 [예약하기] → [예]로 reservationStep3에 제출하는 순간 결정된다.
 
-# 1) 코트 선택 화면
+# 0) 달력에서 시간을 누르면 확인 레이어: "선택하신 날짜는 2026-11-05(목) 12:20 ~ 13:50 입니다. 등록하시겠습니까?" [예]
+SELECT_CONFIRM_TEXTS = ["등록하시겠습니까"]
+
+# 1) 코트 선택 화면 — 예약완료/강습/점검 코트는 disabled + class "ver-red" 등으로 표시
 COURT_CHECKBOX = 'input[type="checkbox"][name="facilityNo"]'   # value = 코트 번호 1~12
 COURT_MAX = 2                                                   # 사이트 제한: 최대 2면
 

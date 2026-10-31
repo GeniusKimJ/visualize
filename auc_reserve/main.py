@@ -130,6 +130,40 @@ def pick_slot(slots, times):
     return None
 
 
+def choose_courts(free, want, preferred=(), fallback=True):
+    """빈 코트 중 고를 코트 번호 목록.
+
+    - preferred 없음: 연속된 번호(연번) 묶음 중 가장 앞 번호. 연번이 없으면 서로 가장 가까운 코트.
+    - preferred 있음: 지정 코트 중 빈 것 유지 → 모자라면 그 코트(없으면 지정 위치)에 가장 가까운 빈 코트로 채움.
+    """
+    free = sorted(set(free))
+    want = max(1, want)
+    if len(free) <= want:
+        return free
+    pref = [c for c in preferred if isinstance(c, int)]
+    kept = [c for c in pref if c in free][:want]
+    if pref and not fallback:
+        return kept
+    if pref and kept:
+        pick = list(kept)
+        while len(pick) < want:
+            rest = [c for c in free if c not in pick]
+            # 이미 고른 코트와 가장 가까운(붙은) 코트, 동률이면 지정 위치에 가까운 쪽 → 낮은 번호
+            rest.sort(key=lambda c: (min(abs(c - p) for p in pick), min(abs(c - p) for p in pref), c))
+            pick.append(rest[0])
+        return sorted(pick)
+    center = sum(pref) / len(pref) if pref else None
+    best = None
+    for i in range(len(free) - want + 1):
+        grp = free[i:i + want]
+        span = grp[-1] - grp[0]                       # 연번이면 want-1 (가장 작음)
+        dist = abs((grp[0] + grp[-1]) / 2 - center) if center is not None else 0
+        key = (span, dist, grp[0])
+        if best is None or key < best[0]:
+            best = (key, grp)
+    return best[1]
+
+
 def fill_date(template, d):
     return template.format(ymd=d.isoformat(), ymd8=d.strftime("%Y%m%d"), day=d.day, dd=f"{d.day:02d}")
 
@@ -358,6 +392,31 @@ class Bot:
             return None, ms
         return parse_calendar(html, d), ms
 
+    def pass_select_confirm(self, url, timeout=8000):
+        """달력에서 시간을 고르면 뜨는 '…등록하시겠습니까?' 확인 레이어에 [예] → 코트 선택 화면 도착까지 대기."""
+        deadline = time.monotonic() + timeout / 1000
+        clicked = False
+        while time.monotonic() < deadline:
+            if self.page.url != url and "reservationStep2" in self.page.url:
+                try:
+                    self.page.wait_for_load_state("domcontentloaded", timeout=5000)
+                except Exception:  # noqa: BLE001
+                    pass
+                return True
+            if not clicked:
+                yes = self.page.locator(S.CONFIRM_YES)
+                try:
+                    if yes.count() and yes.first.is_visible():
+                        txt = self.page.locator(S.CONFIRM_LAYER_TEXT).first.inner_text()
+                        if any(k in txt for k in S.SELECT_CONFIRM_TEXTS):
+                            log.info("시간 선택 확인창 → [예] (%s)", " ".join(txt.split()))
+                            yes.first.click()
+                            clicked = True
+                except Exception:  # noqa: BLE001
+                    pass
+            time.sleep(0.02)
+        return False
+
     def fast_select(self, onclick_js):
         """이미 떠 있는 달력 화면에서 사이트의 시간 선택 함수를 그대로 실행 → 코트 선택 화면으로 바로 이동.
 
@@ -367,12 +426,7 @@ class Bot:
             return False
         url = self.page.url
         self.page.evaluate(f"() => {{ {onclick_js}; }}")
-        try:
-            self.page.wait_for_url(lambda u: u != url and "reservationStep2" in u,
-                                   timeout=8000, wait_until="domcontentloaded")
-        except Exception:  # noqa: BLE001
-            return False
-        return True
+        return self.pass_select_confirm(url)
 
     def date_is_open(self, d):
         cell = self.page.locator(self.date_cell(d))
@@ -438,26 +492,18 @@ class Bot:
                 log.warning("신청서 입력 실패(%s): %s", key, e)
 
     def select_courts(self):
-        """코트 선택 화면이면 config의 courts 우선순위대로 체크. 반환: 선택한 코트 번호 목록 (화면이 아니면 None)."""
+        """코트 선택 화면이면 규칙대로 체크. 반환: 선택한 코트 번호 목록 (화면이 아니면 None)."""
         boxes = self.page.locator(S.COURT_CHECKBOX)
         if not boxes.count():
             return None
-        # 예약된/점검 코트: disabled 이거나 라벨에 색 배경(빨강/주황/초록)이 칠해진 경우
-        info = boxes.evaluate_all("""els => els.map(e => {
-            const lb = e.id ? document.querySelector('label[for="' + e.id + '"]') : null;
-            const st = ((lb && lb.getAttribute('style')) || '') + (e.getAttribute('style') || '');
-            const bg = lb ? getComputedStyle(lb).backgroundColor : '';
-            const colored = /background/i.test(st) || ['rgb(255, 0, 0)', 'rgb(255, 165, 0)', 'rgb(0, 128, 0)'].includes(bg);
-            return {no: parseInt(e.value), ok: !e.disabled && !colored, checked: e.checked};
-        })""")
+        # 예약완료/강습/점검 코트: disabled + class "ver-red" 등 (색으로 표시됨)
+        info = boxes.evaluate_all("""els => els.map(e => ({
+            no: parseInt(e.value), checked: e.checked,
+            ok: !e.disabled && !/\\bver-/.test(e.className)}))""")
         free = [c["no"] for c in info if c["ok"]]
-        want = int(self.cfg.get("court_count", 1))
-        want = max(1, min(want, S.COURT_MAX))
-        order = [n for n in self.cfg.get("courts", []) if n in free]
-        if self.cfg.get("court_fallback_any", True):
-            order += [n for n in free if n not in order]
-        pick = order[:want]
-        log.info("빈 코트 %s → 선택 %s", free, pick)
+        want = max(1, min(int(self.cfg.get("court_count", 1)), S.COURT_MAX))
+        pick = choose_courts(free, want, self.cfg.get("courts", []), self.cfg.get("court_fallback_any", True))
+        log.info("빈 코트 %s / 지정 %s → 선택 %s", free, self.cfg.get("courts", []) or "자동(연번)", pick)
         for c in info:
             if c["checked"] and c["no"] not in pick:
                 self.page.locator(f'{S.COURT_CHECKBOX}[value="{c["no"]}"]').uncheck()
@@ -597,7 +643,10 @@ class Bot:
                 t, f, el = slot
                 label = f"{tg.label()} {t} {f}".strip()
                 log.info("슬롯 선택: %s", label)
-                self.click_and_wait(el)
+                url = self.page.url
+                el.click()
+                if not self.pass_select_confirm(url):
+                    return "실패", label + " (코트 선택 화면으로 넘어가지 못함)"
             t_start = time.monotonic()
             if any(k in self.last_dialog for k in S.UNAVAILABLE_DIALOG_TEXTS):
                 return "마감", self.last_dialog
