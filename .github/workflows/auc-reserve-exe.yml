@@ -1,0 +1,53 @@
+name: AUC Reserve - Windows exe
+
+on:
+  push:
+    paths:
+      - "auc_reserve/**"
+      - ".github/workflows/auc-reserve-exe.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: auc_reserve
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install -r requirements.txt pyinstaller
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build exe
+        run: >
+          python -m PyInstaller --noconfirm --clean --onefile --console
+          --name AUC_Reserve --collect-all playwright main.py
+
+      - name: Smoke test (dry-run)
+        shell: pwsh
+        run: |
+          Copy-Item config.json dist\
+          $env:PYTHONIOENCODING = "utf-8"
+          & .\dist\AUC_Reserve.exe --open --dry-run
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out\AUC_Reserve | Out-Null
+          Copy-Item dist\AUC_Reserve.exe out\AUC_Reserve\
+          Copy-Item config.json, .env.example, README.md, run_weekly.bat, register_task.bat out\AUC_Reserve\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AUC_Reserve-win64
+          path: auc_reserve/out/AUC_Reserve
+          retention-days: 30

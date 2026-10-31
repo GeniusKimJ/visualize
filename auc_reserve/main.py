@@ -27,7 +27,9 @@ from schedule import (KST, build_targets, calendar_url, rolling_bookable, rollin
                       rolling_targets_opening_on, target_week, upcoming_open)
 from timesync import Clock
 
-BASE = Path(__file__).resolve().parent
+# exe(PyInstaller)로 실행하면 __file__은 임시 폴더라서, exe가 있는 폴더를 기준으로 삼는다
+FROZEN = getattr(sys, "frozen", False)
+BASE = Path(sys.executable).resolve().parent if FROZEN else Path(__file__).resolve().parent
 LOG_DIR = BASE / "logs"
 log = logging.getLogger("main")
 
@@ -907,7 +909,58 @@ def dry_run(open_dt, cfg):
     print("  열림 감지 즉시: 떠 있는 달력에서 시간 선택 → 코트 선택 → 인원 입력 → [예약하기] 직전 알림")
 
 
+MENU = [
+    ("오픈 대기 → 자동 예약 (config.json의 open_time 기준)", ["--open"]),
+    ("오픈 대기 → 자동 예약 (예상 오픈 시각 직접 입력)", None),
+    ("일정만 확인 (브라우저 없이)", ["--open", "--dry-run"]),
+    ("점검 (로그인 / 셀렉터 / 서버 시간)", ["--check"]),
+    ("빈자리 감시", ["--watch"]),
+    ("로그인 테스트", ["--login"]),
+    ("화면 저장 (셀렉터 확인용)", ["--inspect"]),
+]
+
+
+def menu():
+    """인자 없이 실행(exe 더블클릭)하면 보여 줄 메뉴. 선택에 맞는 명령행 인자 목록을 돌려준다."""
+    print("\n=== 안양도시공사 배드민턴장 예약 도우미 ===")
+    for i, (name, _) in enumerate(MENU, 1):
+        print(f"  {i}. {name}")
+    print("  0. 종료")
+    while True:
+        sel = input("번호 선택 > ").strip()
+        if sel == "0":
+            return None
+        if sel.isdigit() and 1 <= int(sel) <= len(MENU):
+            break
+    argv = MENU[int(sel) - 1][1]
+    if argv is None:
+        while True:
+            at = input('예상 오픈 일시 (예: 2026-11-01 15:00) > ').strip()
+            try:
+                datetime.strptime(at, "%Y-%m-%d %H:%M")
+                break
+            except ValueError:
+                print("  형식이 맞지 않습니다. YYYY-MM-DD HH:MM 으로 입력하세요.")
+        argv = ["--open", "--open-at", at]
+    return argv
+
+
 def main():
+    from_menu = len(sys.argv) == 1
+    argv = menu() if from_menu else None
+    if from_menu and argv is None:
+        return
+    try:
+        run(argv)
+    finally:
+        if from_menu:
+            try:
+                input("\nEnter를 누르면 창을 닫습니다... ")
+            except (EOFError, KeyboardInterrupt):
+                pass
+
+
+def run(argv=None):
     ap = argparse.ArgumentParser(description="안양도시공사 체육시설 반자동 예약 도우미")
     g = ap.add_mutually_exclusive_group(required=True)
     for m in ("login", "check", "inspect", "open", "watch"):
@@ -916,10 +969,13 @@ def main():
     ap.add_argument("--yes", action="store_true", help="목표 확인 질문 생략 (작업 스케줄러용)")
     ap.add_argument("--open-at", help='예상 오픈 일시 직접 지정. 예: "2026-11-01 15:00"')
     ap.add_argument("--config", default=str(BASE / "config.json"))
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     setup_logging()
     load_env(BASE / ".env")
+    if not Path(args.config).exists():
+        log.error("설정 파일이 없습니다: %s (exe와 같은 폴더에 config.json을 두세요)", args.config)
+        return
     cfg = load_config(Path(args.config))
     notifier = Notifier(cfg)
     clock = Clock()
