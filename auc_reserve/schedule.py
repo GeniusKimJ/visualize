@@ -87,3 +87,58 @@ def build_targets(cfg, open_dt):
 def calendar_url(d, first_of_month=True):
     ymd = d.replace(day=1) if first_of_month else d
     return CALENDAR_URL.format(ymd=ymd.isoformat())
+
+
+# ── 이용일 N일 전 오픈 방식 (예: 7일 전 15:00) ─────────────────────
+def _candidates(cfg, today, horizon):
+    """target_days 요일(앞으로 horizon일) + extra_dates - skip_dates. 우선순위 순서, 날짜 중복 제거."""
+    skip = {parse_date(s) for s in cfg.get("skip_dates", [])}
+    default_times = cfg.get("default_times", [])
+    default_fac = cfg.get("default_facilities", [])
+    out, seen = [], set()
+
+    def add(t):
+        if t.day in skip or t.day in seen or t.day <= today:
+            return
+        seen.add(t.day)
+        out.append(t)
+
+    for ex in cfg.get("extra_dates", []):
+        if isinstance(ex, str):
+            add(Target(parse_date(ex), list(default_times), list(default_fac), "extra_dates"))
+        else:
+            add(Target(parse_date(ex["date"]), list(ex.get("times", default_times)),
+                       list(ex.get("facilities", default_fac)), "extra_dates"))
+    for td in cfg.get("target_days", []):
+        wd = WEEKDAYS[td["weekday"].upper()]
+        for k in range(1, horizon + 1):
+            d = today + timedelta(days=k)
+            if d.weekday() == wd:
+                add(Target(d, list(td.get("times", default_times)),
+                           list(td.get("facilities", default_fac)),
+                           f"target_days:{td['weekday'].upper()}"))
+    return out
+
+
+def rolling_open_of(day, cfg):
+    n = int(cfg.get("open_days_before", 7))
+    return datetime.combine(day - timedelta(days=n), parse_hms(cfg.get("open_time", "15:00:00")),
+                            tzinfo=KST)
+
+
+def rolling_plan(cfg, now, grace_hours=6):
+    """가장 가까운 오픈 시점과 그때 열리는 목표 날짜. 없으면 (None, [])."""
+    n = int(cfg.get("open_days_before", 7))
+    cands = _candidates(cfg, now.date(), n + 21)
+    upcoming = [(rolling_open_of(t.day, cfg), t) for t in cands]
+    upcoming = [(o, t) for o, t in upcoming if o + timedelta(hours=grace_hours) >= now]
+    if not upcoming:
+        return None, []
+    first = min(o for o, _ in upcoming)
+    return first, [t for o, t in upcoming if o == first]
+
+
+def rolling_bookable(cfg, now):
+    """이미 열려 있고 아직 이용일이 지나지 않은 목표 날짜 (빈자리 감시용)."""
+    n = int(cfg.get("open_days_before", 7))
+    return [t for t in _candidates(cfg, now.date(), n + 1) if rolling_open_of(t.day, cfg) <= now]

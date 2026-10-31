@@ -94,3 +94,44 @@ class CalendarUrl(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+from schedule import rolling_bookable, rolling_plan  # noqa: E402
+
+RCFG = {
+    "open_days_before": 7, "open_time": "15:00:00",
+    "target_days": [{"weekday": "TUE", "times": ["18:50"]}, {"weekday": "THU", "times": ["20:30"]}],
+    "default_times": ["18:50"],
+}
+
+
+class RollingPlan(unittest.TestCase):
+    def test_next_open_is_d_minus_7_at_15(self):
+        # 10/31(토) 오전 → 11/3(화)는 10/27에 이미 열림, 11/5(목)는 10/29에 열림
+        # 다음 오픈은 11/10(화)의 오픈 = 11/3(화) 15:00
+        o, t = rolling_plan(RCFG, kst(2026, 10, 31, 10, 0))
+        self.assertEqual(o, kst(2026, 11, 3, 15, 0))
+        self.assertEqual([x.day for x in t], [date(2026, 11, 10)])
+        self.assertEqual(t[0].times, ["18:50"])
+
+    def test_same_day_before_open(self):
+        o, t = rolling_plan(RCFG, kst(2026, 11, 5, 14, 20))
+        self.assertEqual((o, t[0].day), (kst(2026, 11, 5, 15, 0), date(2026, 11, 12)))
+
+    def test_shortly_after_open_still_counts(self):
+        o, t = rolling_plan(RCFG, kst(2026, 11, 5, 15, 3))
+        self.assertEqual(t[0].day, date(2026, 11, 12))
+
+    def test_extra_date_and_skip(self):
+        cfg = dict(RCFG, extra_dates=[{"date": "2026-11-07", "times": ["10:40"]}], skip_dates=["2026-11-10"])
+        o, t = rolling_plan(cfg, kst(2026, 10, 31, 10, 0))
+        self.assertEqual((o, t[0].day, t[0].times), (kst(2026, 10, 31, 15, 0), date(2026, 11, 7), ["10:40"]))
+        o, t = rolling_plan(cfg, kst(2026, 10, 31, 22, 0))
+        self.assertEqual((o, t[0].day), (kst(2026, 11, 5, 15, 0), date(2026, 11, 12)))
+
+    def test_nothing_configured(self):
+        self.assertEqual(rolling_plan({"open_time": "15:00"}, kst(2026, 10, 31, 10)), (None, []))
+
+    def test_bookable_for_watch(self):
+        t = rolling_bookable(RCFG, kst(2026, 10, 31, 10, 0))
+        self.assertEqual([x.day for x in t], [date(2026, 11, 3), date(2026, 11, 5)])

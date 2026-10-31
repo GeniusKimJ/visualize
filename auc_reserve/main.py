@@ -23,7 +23,8 @@ from pathlib import Path
 
 import site_selectors as S
 from notifier import Notifier
-from schedule import KST, build_targets, calendar_url, target_week, upcoming_open
+from schedule import (KST, build_targets, calendar_url, rolling_bookable, rolling_plan,
+                      target_week, upcoming_open)
 from timesync import Clock
 
 BASE = Path(__file__).resolve().parent
@@ -45,8 +46,10 @@ def load_env(path):
 
 def load_config(path):
     cfg = json.loads(path.read_text(encoding="utf-8"))
+    cfg.setdefault("open_mode", "rolling")        # rolling: 이용일 N일 전 오픈 / weekly: 매주 정해진 요일
+    cfg.setdefault("open_days_before", 7)
     cfg.setdefault("open_weekday", "SUN")
-    cfg.setdefault("open_time", "10:00:00")
+    cfg.setdefault("open_time", "15:00:00")
     cfg.setdefault("max_per_week", 2)
     cfg.setdefault("watch_on_fail", "ask")       # ask | auto | off
     cfg.setdefault("final_wait_min", 10)
@@ -96,11 +99,25 @@ def slot_starts_at(text, hhmm):
     return any((int(a), int(b)) == want for a, b, _ in TIME_RE.findall(text))
 
 
+def make_plan(cfg, now):
+    if cfg["open_mode"] == "weekly":
+        open_dt = upcoming_open(now, cfg["open_weekday"], cfg["open_time"])
+        return open_dt, build_targets(cfg, open_dt)
+    return rolling_plan(cfg, now)
+
+
 def print_plan(open_dt, targets, cfg):
     print("\n" + "=" * 60)
+    if open_dt is None:
+        print(" 예정된 오픈 없음 (config.json의 target_days / extra_dates 확인)")
+        print("=" * 60 + "\n")
+        return
     print(f" 오픈 일시 : {fmt_dt(open_dt)}")
-    week = target_week(open_dt)
-    print(f" 예약 주간 : {week[0]} ~ {week[-1]}")
+    if cfg["open_mode"] == "weekly":
+        week = target_week(open_dt)
+        print(f" 예약 주간 : {week[0]} ~ {week[-1]}")
+    else:
+        print(f" 오픈 규칙 : 이용일 {cfg['open_days_before']}일 전 {cfg['open_time'][:5]}")
     print(f" 최대 예약 : {cfg['max_per_week']}건")
     print("-" * 60)
     if not targets:
@@ -658,18 +675,26 @@ def main():
     notifier = Notifier(cfg)
     clock = Clock()
 
-    open_dt = upcoming_open(datetime.now(KST), cfg["open_weekday"], cfg["open_time"])
-    targets = build_targets(cfg, open_dt)
-    print_plan(open_dt, targets, cfg)
+    now = datetime.now(KST)
+    open_dt, targets = make_plan(cfg, now)
+    if args.watch and cfg["open_mode"] == "rolling":
+        targets = rolling_bookable(cfg, now)
+        print("[감시 대상] 이미 열려 있는 목표 날짜: " + (", ".join(t.label() for t in targets) or "없음"))
+    else:
+        print_plan(open_dt, targets, cfg)
 
     if args.dry_run:
-        if args.open:
+        if args.open and open_dt:
             dry_run(open_dt, cfg)
         return
 
     if args.open or args.watch:
         if not targets:
             log.error("목표 날짜가 없습니다. config.json을 확인하세요.")
+            return
+        if args.open and args.yes and open_dt - now > timedelta(hours=2):
+            # 작업 스케줄러가 매일 실행할 때: 오늘 열리는 목표가 없으면 바로 종료
+            log.info("오늘 열리는 목표 날짜 없음 (다음 오픈 %s) → 종료", fmt_dt(open_dt))
             return
         if not args.yes and not confirm("위 내용으로 진행할까요?"):
             return
