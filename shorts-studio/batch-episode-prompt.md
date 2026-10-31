@@ -4,7 +4,7 @@
 
 ---
 
-저장소 /home/user/visualize (브랜치 kkd/gifted-johnson-1f1rdw)에서 5060 유튜브 쇼츠 1편을 끝까지 만든다. 오늘 날짜는 `TZ=Asia/Seoul date`로 확인한다.
+저장소 /home/user/visualize (브랜치 kkd/sense5060)에서 5060 유튜브 쇼츠 1편을 끝까지 만든다. 오늘 날짜는 `TZ=Asia/Seoul date`로 확인한다.
 **git commit/push는 하지 않는다** (오케스트레이터가 한다). 다른 회차 폴더는 건드리지 않는다.
 
 ## 먼저 읽을 것
