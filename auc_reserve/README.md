@@ -11,7 +11,8 @@
 
 ```
 auc_reserve/
-├── main.py            # 실행 진입점 (--login/--check/--inspect/--open/--watch)
+├── gui.py             # 창(GUI) 프로그램
+├── main.py            # 핵심 로직 + 명령행 실행 (--login/--check/--inspect/--open/--watch)
 ├── schedule.py        # 오픈 일시·목표 날짜 계산
 ├── site_selectors.py  # 사이트 셀렉터 (⚠ 추정값, 반드시 확인)
 ├── notifier.py        # 소리 + 텔레그램 알림
@@ -20,32 +21,35 @@ auc_reserve/
 ├── .env.example       # 아이디 (복사해서 .env)
 ├── run_weekly.bat     # 작업 스케줄러가 실행할 파일 (exe가 있으면 exe 실행)
 ├── build_exe.bat      # PC에서 exe 직접 빌드
+├── start_gui.bat      # Python으로 창 버전 실행
 ├── register_task.bat  # 작업 스케줄러 등록
 └── tests/             # 단위 테스트
 ```
 
-## exe로 쓰기 (Python 설치 없이)
+## 창(GUI) 프로그램으로 쓰기
 
+`AUC_Reserve.exe`(또는 `start_gui.bat` / `python gui.py`)를 실행하면 창이 열립니다.
+
+- **위쪽:** 다음 오픈 일시와 목표 날짜, 남은 시간
+- **예약 설정 탭:** 요일별 시간(앞쪽이 우선), 특정 날짜, 건너뛸 날짜, 원하는 코트(빈칸 = 연번 자동), 코트 수, 사용인원, [예]까지 자동 여부
+- **고급 설정 탭:** 오픈 시각, 감시 범위/간격, 텔레그램, 알림 소리, 아이디
+- **버튼:** 설정 저장 / 일정 확인 / 점검 / 로그인 테스트 / ▶ 오픈 대기 시작 / 빈자리 감시 / ■ 중지 / 브라우저 닫기
+- **진행 기록:** 실시간 로그. 자리 확보·로그인 필요 같은 중요한 알림은 맨 앞에 팝업으로 뜹니다.
+
+설정은 같은 폴더의 `config.json`에 저장됩니다.
+
+### exe 받기
 1. GitHub 저장소 → **Actions** → "AUC Reserve - Windows exe" → 최신 실행 → 아래 **Artifacts**에서 `AUC_Reserve-win64` 다운로드
    (또는 PC에서 `build_exe.bat` 실행 → `dist\AUC_Reserve\`)
-2. 압축을 풀면 `AUC_Reserve.exe`, `config.json`, `run_weekly.bat`, `register_task.bat`이 들어 있습니다. **같은 폴더에 두세요.**
-3. `config.json`을 메모장으로 열어 날짜, 시간, 코트를 설정합니다.
-4. `AUC_Reserve.exe`를 더블클릭하면 메뉴가 나옵니다.
+2. 압축을 풀어 `AUC_Reserve.exe`와 `config.json`을 **같은 폴더**에 둡니다.
 
-```
-=== 안양도시공사 배드민턴장 예약 도우미 ===
-  1. 오픈 대기 → 자동 예약 (config.json의 open_time 기준)
-  2. 오픈 대기 → 자동 예약 (예상 오픈 시각 직접 입력)
-  3. 일정만 확인 (브라우저 없이)
-  4. 점검 (로그인 / 셀렉터 / 서버 시간)
-  5. 빈자리 감시
-  6. 로그인 테스트
-  7. 화면 저장 (셀렉터 확인용)
-```
+- PC에 **Chrome이 설치**되어 있어야 합니다.
+- 처음 실행할 때 SmartScreen 경고가 뜨면 "추가 정보 → 실행" (서명 안 된 exe).
+- 명령행 옵션도 그대로 됩니다: `AUC_Reserve.exe --open --dry-run` (창 모드 exe라 결과는 `logs` 폴더에 기록)
 
-- PC에 **Chrome이 설치**되어 있어야 합니다 (브라우저를 따로 받지 않음).
-- 처음 실행할 때 Windows SmartScreen 경고가 뜰 수 있습니다 (서명 안 된 exe). "추가 정보 → 실행"을 누르세요.
-- 명령행 옵션도 그대로 됩니다: `AUC_Reserve.exe --open --open-at "2026-11-01 15:00"`
+### 매일 자동 실행
+`register_task.bat`으로 등록하면 매일 14:20에 `run_weekly.bat` → `AUC_Reserve.exe --auto`가 실행됩니다.
+창이 뜨면서 바로 오픈 대기를 시작하고, 그날 열리는 목표 날짜가 없으면 10초 뒤 창이 저절로 닫힙니다.
 
 ## 설치 (Windows, Python으로 실행)
 

@@ -28,16 +28,20 @@ jobs:
 
       - name: Build exe
         run: >
-          python -m PyInstaller --noconfirm --clean --onefile --console
-          --name AUC_Reserve --collect-all playwright main.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed
+          --name AUC_Reserve --collect-all playwright gui.py
 
-      - name: Smoke test (dry-run)
+      - name: Smoke test (windowed exe)
         shell: pwsh
         run: |
           Copy-Item config.json dist\
-          $env:PYTHONIOENCODING = "utf-8"
-          & .\dist\AUC_Reserve.exe --open --dry-run
-          if ($LASTEXITCODE -ne 0) { exit 1 }
+          # 창 모드 exe라 콘솔 출력이 없으므로 종료 코드와 로그 파일로 확인
+          $p = Start-Process dist\AUC_Reserve.exe -ArgumentList "--open","--dry-run" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Write-Error "dry-run exit $($p.ExitCode)"; exit 1 }
+          $p = Start-Process dist\AUC_Reserve.exe -ArgumentList "--selftest" -Wait -PassThru
+          Get-Content dist\logs\*.log -Encoding utf8 | Select-Object -Last 15
+          if ($p.ExitCode -ne 0) { Write-Error "selftest exit $($p.ExitCode)"; exit 1 }
+          if (-not (Select-String -Path dist\logs\*.log -Pattern "SELFTEST OK" -Quiet)) { Write-Error "selftest log missing"; exit 1 }
 
       - name: Package
         shell: pwsh

@@ -17,6 +17,7 @@ import os
 import random
 import re
 import sys
+import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -32,6 +33,21 @@ FROZEN = getattr(sys, "frozen", False)
 BASE = Path(sys.executable).resolve().parent if FROZEN else Path(__file__).resolve().parent
 LOG_DIR = BASE / "logs"
 log = logging.getLogger("main")
+
+# GUI에서 [중지]를 누르면 set → 대기 중인 곳에서 InterruptedError로 빠져나옴
+STOP = threading.Event()
+
+
+def nap(sec):
+    """중지 가능한 sleep."""
+    if STOP.wait(max(0.0, sec)):
+        raise InterruptedError("사용자 중지")
+
+
+def out(text=""):
+    """화면 출력용. 콘솔과 GUI 로그 창에 모두 보이도록 로그로 남긴다."""
+    for line in str(text).strip("\n").splitlines() or [""]:
+        log.info(line)
 
 
 # ─────────────────────────── 설정 / 로그 ───────────────────────────
@@ -76,7 +92,14 @@ def load_config(path):
     return cfg
 
 
+_LOGGING_READY = False
+
+
 def setup_logging():
+    global _LOGGING_READY
+    if _LOGGING_READY:
+        return
+    _LOGGING_READY = True
     LOG_DIR.mkdir(exist_ok=True)
     fmt = logging.Formatter("%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s: %(message)s",
                             "%H:%M:%S")
@@ -84,10 +107,11 @@ def setup_logging():
     root.setLevel(logging.INFO)
     fh = logging.FileHandler(LOG_DIR / f"run_{datetime.now():%Y%m%d}.log", encoding="utf-8")
     fh.setFormatter(fmt)
-    sh = logging.StreamHandler(sys.stdout)
-    sh.setFormatter(fmt)
     root.addHandler(fh)
-    root.addHandler(sh)
+    if sys.stdout:                      # 창 모드 exe에서는 콘솔이 없음
+        sh = logging.StreamHandler(sys.stdout)
+        sh.setFormatter(fmt)
+        root.addHandler(sh)
 
 
 def mask(s):
@@ -185,24 +209,24 @@ def make_plan(cfg, now):
 
 
 def print_plan(open_dt, targets, cfg):
-    print("\n" + "=" * 60)
+    out("\n" + "=" * 60)
     if open_dt is None:
-        print(" 예정된 오픈 없음 (config.json의 target_days / extra_dates 확인)")
-        print("=" * 60 + "\n")
+        out(" 예정된 오픈 없음 (config.json의 target_days / extra_dates 확인)")
+        out("=" * 60 + "\n")
         return
-    print(f" 오픈 일시 : {fmt_dt(open_dt)}")
+    out(f" 오픈 일시 : {fmt_dt(open_dt)}")
     if cfg["open_mode"] == "weekly":
         week = target_week(open_dt)
-        print(f" 예약 주간 : {week[0]} ~ {week[-1]}")
+        out(f" 예약 주간 : {week[0]} ~ {week[-1]}")
     else:
-        print(f" 오픈 규칙 : 이용일 {cfg['open_days_before']}일 전 {cfg['open_time'][:5]}")
-    print(f" 최대 예약 : {cfg['max_per_week']}건")
-    print("-" * 60)
+        out(f" 오픈 규칙 : 이용일 {cfg['open_days_before']}일 전 {cfg['open_time'][:5]}")
+    out(f" 최대 예약 : {cfg['max_per_week']}건")
+    out("-" * 60)
     if not targets:
-        print(" (목표 날짜 없음)")
+        out(" (목표 날짜 없음)")
     for i, t in enumerate(targets, 1):
-        print(f" {i}. {t.label()}  시간 {t.times}  코트 {t.facilities}  [{t.source}]")
-    print("=" * 60 + "\n")
+        out(f" {i}. {t.label()}  시간 {t.times}  코트 {t.facilities}  [{t.source}]")
+    out("=" * 60 + "\n")
 
 
 # ─────────────────────────── 브라우저 봇 ───────────────────────────
@@ -329,7 +353,7 @@ class Bot:
                 log.info("로그인 확인")
                 self.last_access = time.monotonic()
                 return True
-            time.sleep(1)
+            nap(1)
         self.n.alert(f"{wait_min}분 안에 로그인이 확인되지 않았습니다.")
         return False
 
@@ -351,7 +375,7 @@ class Bot:
         self.n.alert(f"{name} 단계가 나왔습니다. 브라우저에서 직접 처리해주세요.")
         deadline = time.monotonic() + wait_min * 60
         while time.monotonic() < deadline:
-            time.sleep(2)
+            nap(2)
             if not self.find_blocker():
                 log.info("%s 처리 완료 → 계속 진행", name)
                 return True
@@ -416,7 +440,7 @@ class Bot:
                             clicked = True
                 except Exception:  # noqa: BLE001
                     pass
-            time.sleep(0.02)
+            nap(0.02)
         return False
 
     def fast_select(self, onclick_js):
@@ -613,7 +637,7 @@ class Bot:
                     return True
                 if any(k in self.body_text() for k in S.COMPLETE_TEXTS):
                     return True
-                time.sleep(1)
+                nap(1)
             return False
         finally:
             self.phase = "auto"
@@ -711,7 +735,7 @@ def book_all(bot, targets, cfg, fast_first=None):
 def report(results, notifier):
     lines = ["[예약 결과]"] + [f"{tg.label()}  {st}  {de}" for tg, st, de in results]
     text = "\n".join(lines)
-    print("\n" + text + "\n")
+    out("\n" + text + "\n")
     notifier.info(text)
 
 
@@ -799,7 +823,7 @@ def wait_until_open(bot, clock, cfg, open_dt, first):
             bot.n.alert("오픈 대기 시간을 초과해 중단합니다.")
             return False, None
         interval = 5.0 if slowed else (cfg["fast_poll_interval_sec"] if near else cfg["poll_interval_sec"])
-        time.sleep(max(0.0, interval - (time.monotonic() - t0)))
+        nap(interval - (time.monotonic() - t0))
 
 
 def run_watch(bot, targets, cfg, already_booked=0):
@@ -820,8 +844,8 @@ def run_watch(bot, targets, cfg, already_booked=0):
                 if status == "성공":
                     booked += 1
                     pending.remove(tg)
-            time.sleep(random.uniform(1, 3))
-        time.sleep(30 + random.uniform(0, 15))
+            nap(random.uniform(1, 3))
+        nap(30 + random.uniform(0, 15))
     bot.n.info("빈자리 감시 종료")
 
 
@@ -833,7 +857,7 @@ def cmd_inspect(bot, first_day):
         cls: e.className && String(e.className), type: e.getAttribute('type'),
         href: e.getAttribute('href'), onclick: e.getAttribute('onclick'),
         data: Object.assign({}, e.dataset), text: (e.innerText || e.value || '').trim().slice(0, 60)}))"""
-    print("\n브라우저에서 원하는 화면(로그인, 달력, 시간표, 신청서 등)으로 이동한 뒤 Enter를 누르면 저장합니다.")
+    out("\n브라우저에서 원하는 화면(로그인, 달력, 시간표, 신청서 등)으로 이동한 뒤 Enter를 누르면 저장합니다.")
     n = 0
     while True:
         ans = input("저장: Enter / 종료: q > ").strip().lower()
@@ -846,7 +870,7 @@ def cmd_inspect(bot, first_day):
         stem.with_suffix(".json").write_text(json.dumps({"url": bot.page.url, "elements": elems},
                                                         ensure_ascii=False, indent=1), encoding="utf-8")
         bot.page.screenshot(path=str(stem.with_suffix(".png")), full_page=True)
-        print(f"  저장됨: {stem.name}.html / .json / .png  ({bot.page.url})")
+        out(f"  저장됨: {stem.name}.html / .json / .png  ({bot.page.url})")
 
 
 def cmd_check(bot, clock, cfg, targets):
@@ -877,22 +901,22 @@ def cmd_check(bot, clock, cfg, targets):
         for _ in range(3):
             st, ms = bot.fetch_calendar(d)
             lat.append(ms)
-            time.sleep(1)
+            nap(1)
         rows.append(("가벼운 확인 응답시간", " / ".join(f"{x:.0f}ms" for x in lat)))
         if st:
             rows.append(("가벼운 확인: 열림 / 로그아웃", f"{st['opened']} / {st['logged_out']}"))
             rows.append(("가벼운 확인: 예약가능 시간", sorted(st["slots"]) or "없음"))
         rows.append(("인증/대기 감지", bot.find_blocker() or "없음"))
-    print("\n[점검 결과]")
+    out("\n[점검 결과]")
     for k, v in rows:
-        print(f"  {k:<32} {v}")
-    print("\n값이 0이거나 이상하면 --inspect로 화면을 저장해 site_selectors.py를 수정하세요.")
+        out(f"  {k:<32} {v}")
+    out("\n값이 0이거나 이상하면 --inspect로 화면을 저장해 site_selectors.py를 수정하세요.")
 
 
 def dry_run(open_dt, cfg):
     win = timedelta(minutes=cfg["open_window_min"])
     fw = cfg["fast_window_sec"]
-    print("[dry-run] 예정된 동작 (브라우저 실행 안 함)")
+    out("[dry-run] 예정된 동작 (브라우저 실행 안 함)")
     plan = [
         (open_dt - win - timedelta(minutes=30), "로그인 점검"),
         (open_dt - win - timedelta(minutes=10), "로그인 점검"),
@@ -905,8 +929,8 @@ def dry_run(open_dt, cfg):
         (open_dt + timedelta(minutes=cfg["max_wait_after_open_min"]), "대기 중단"),
     ]
     for when, what in plan:
-        print(f"  {fmt_dt(when)}  {what}")
-    print("  열림 감지 즉시: 떠 있는 달력에서 시간 선택 → 코트 선택 → 인원 입력 → [예약하기] 직전 알림")
+        out(f"  {fmt_dt(when)}  {what}")
+    out("  열림 감지 즉시: 떠 있는 달력에서 시간 선택 → 코트 선택 → 인원 입력 → [예약하기] 직전 알림")
 
 
 MENU = [
@@ -971,10 +995,13 @@ def main():
                 pass
 
 
-def run(argv=None):
+def run(argv=None, confirm_fn=None, wait_close_fn=None, alert_fn=None):
+    """명령 실행. GUI는 confirm_fn(질문)->bool, wait_close_fn(메시지), alert_fn(메시지)를 넘긴다."""
+    ask = confirm_fn or confirm
+    STOP.clear()
     ap = argparse.ArgumentParser(description="안양도시공사 체육시설 반자동 예약 도우미")
     g = ap.add_mutually_exclusive_group(required=True)
-    for m in ("login", "check", "inspect", "open", "watch"):
+    for m in ("login", "check", "inspect", "open", "watch", "selftest"):
         g.add_argument(f"--{m}", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="브라우저 없이 계산/일정만 출력")
     ap.add_argument("--yes", action="store_true", help="목표 확인 질문 생략 (작업 스케줄러용)")
@@ -989,7 +1016,9 @@ def run(argv=None):
         return
     cfg = load_config(Path(args.config))
     notifier = Notifier(cfg)
+    notifier.on_alert = alert_fn
     clock = Clock()
+    clock.stop = STOP
 
     now = datetime.now(KST)
     open_dt, targets = make_plan(cfg, now)
@@ -1001,11 +1030,11 @@ def run(argv=None):
             targets = rolling_targets_opening_on(cfg, open_dt.date(), now)
     if args.watch and cfg["open_mode"] == "rolling":
         targets = rolling_bookable(cfg, now)
-        print("[감시 대상] 이미 열려 있는 목표 날짜: " + (", ".join(t.label() for t in targets) or "없음"))
+        out("[감시 대상] 이미 열려 있는 목표 날짜: " + (", ".join(t.label() for t in targets) or "없음"))
     else:
         print_plan(open_dt, targets, cfg)
         if args.open_at:
-            print(" ※ 예상 오픈 시각 직접 지정 (--open-at). 위 날짜가 비어 있으면 그날 열리는 날짜를"
+            out(" ※ 예상 오픈 시각 직접 지정 (--open-at). 위 날짜가 비어 있으면 그날 열리는 날짜를"
                   " target_days / extra_dates에 넣으세요.\n")
 
     if args.dry_run:
@@ -1021,16 +1050,23 @@ def run(argv=None):
             # 작업 스케줄러가 매일 실행할 때: 오늘 열리는 목표가 없으면 바로 종료
             log.info("오늘 열리는 목표 날짜 없음 (다음 오픈 %s) → 종료", fmt_dt(open_dt))
             return
-        if not args.yes and not confirm("위 내용으로 진행할까요?"):
+        if not args.yes and not ask("위 내용으로 진행할까요?"):
             return
         notifier.info("예약 도우미 시작\n" + "\n".join(
             f"{t.label()} {t.times} {t.facilities}" for t in targets))
 
     bot = Bot(cfg, notifier, clock)
     error = False
+    skip_wait = False
     try:
         bot.start()
-        if args.login:
+        if args.selftest:
+            # 빌드 확인용: 브라우저를 띄워 간단한 페이지를 그려 보고 바로 종료
+            bot.page.set_content("<p id=t>ok</p>")
+            assert bot.page.inner_text("#t") == "ok"
+            log.info("SELFTEST OK (브라우저 실행 확인)")
+            skip_wait = True
+        elif args.login:
             bot.ensure_login()
         elif args.check:
             cmd_check(bot, clock, cfg, targets)
@@ -1051,22 +1087,27 @@ def run(argv=None):
             if booked < cfg["max_per_week"]:
                 mode = cfg["watch_on_fail"]
                 left = [tg for tg, st, _ in results if st != "성공"] or targets
-                if mode == "auto" or (mode == "ask" and confirm("빈자리 감시 모드로 전환할까요?")):
+                if mode == "auto" or (mode == "ask" and ask("빈자리 감시 모드로 전환할까요?")):
                     run_watch(bot, left, cfg, booked)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, InterruptedError):
         log.info("사용자 중단")
     except Exception:  # noqa: BLE001
         error = True
         log.exception("오류 발생")
+        if args.selftest:
+            raise
         if bot.page:
             bot.screenshot("fatal")
         notifier.alert("스크립트 오류가 발생했습니다. 브라우저에서 직접 이어서 진행해주세요.")
     finally:
-        if bot.ctx:
+        if bot.ctx and not skip_wait:
             msg = "오류가 있었습니다. 브라우저 화면은 그대로 둡니다." if error else "작업 끝."
             try:
-                input(f"\n{msg} Enter를 누르면 브라우저를 닫고 종료합니다... ")
-            except (EOFError, KeyboardInterrupt):
+                if wait_close_fn:
+                    wait_close_fn(msg)
+                else:
+                    input(f"\n{msg} Enter를 누르면 브라우저를 닫고 종료합니다... ")
+            except Exception:  # noqa: BLE001  (창 모드 exe에는 콘솔 입력이 없음)
                 pass
         bot.stop()
 

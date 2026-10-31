@@ -14,6 +14,7 @@ class Notifier:
         self.token = n.get("telegram_token", "").strip()
         self.chat_id = str(n.get("chat_id", "")).strip()
         self.sound = n.get("sound", True)
+        self.on_alert = None        # GUI 팝업 등 추가 알림 (메시지 하나를 받는 함수)
 
     def info(self, msg):
         """텔레그램만 (소리 없음)."""
@@ -23,6 +24,11 @@ class Notifier:
     def alert(self, msg):
         """소리 + 텔레그램. 사용자가 PC 앞으로 와야 할 때."""
         log.warning("[호출] %s", msg)
+        if self.on_alert:
+            try:
+                self.on_alert(msg)
+            except Exception:  # noqa: BLE001
+                pass
         self._sound()
         self._telegram("🔔 " + msg)
 

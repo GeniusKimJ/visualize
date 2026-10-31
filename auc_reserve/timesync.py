@@ -101,6 +101,7 @@ class Clock:
         self.offset = 0.0
         self.source = "local"
         self.ntp = None
+        self.stop = None        # threading.Event: set되면 대기 중단
 
     def sync_ntp(self, server):
         off = ntp_offset(server)
@@ -145,4 +146,9 @@ class Clock:
             rem = target - self.now_ts()
             if rem <= 0:
                 return
-            time.sleep(min(rem - 0.05, 10) if rem > 0.1 else 0.005)
+            chunk = min(rem - 0.05, 0.5) if rem > 0.1 else 0.005
+            if self.stop is not None:
+                if self.stop.wait(chunk):
+                    raise InterruptedError("사용자 중지")
+            else:
+                time.sleep(chunk)
