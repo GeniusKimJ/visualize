@@ -1,0 +1,48 @@
+[장면 1] 임플란트, 65세부터 30%만 내요.
+  한글: 밝은 거실 창가에서 환하게 웃는 60대 한국인 부부, 위쪽은 흐린 하늘과 밝은 벽, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s smiling brightly by a living room window, soft sky and plain bright wall in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 2] 만 65세부터 건강보험이 적용돼요.
+  한글: 작은 생일 케이크 앞에서 미소 짓는 60대 중반 한국인 여성, 숫자 초 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her mid 60s smiling in front of a small birthday cake, no number candles, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 3] 임플란트도, 틀니도 돼요.
+  한글: 밝고 깨끗한 치과 진료실의 빈 진료 의자, 로고 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: an empty dental chair in a bright clean dental clinic room, no logos, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 4] 표로 보면 내는 돈은 진료비의 30%예요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 5] 임플란트는 평생 2개까지예요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 6] 틀니는 완전틀니, 부분틀니 모두 돼요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 7] 위턱, 아래턱 따로 7년에 한 번씩이에요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 8] 그런데 65세 전에 하면
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 9] 이 건강보험 혜택이 없어요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 10] 비용을 모두 직접 내셔야 해요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 11] 치과에서 대상자로 등록한 뒤 적용돼요.
+  한글: 치과 접수 창구에서 서류를 작성하는 60대 한국인 남성, 글자는 흐릿하게, 로고 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s filling out a form at a dental clinic reception desk, text blurred, no logos, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 12] 65세가 가까우시다면
+  한글: 집 안 탁상 달력을 보며 생각하는 60대 초반 한국인 남성, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his early 60s looking thoughtfully at a desk calendar at home, numbers blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 13] 치료 시기를 치과와 상의해 보세요.
+  한글: 치과에서 치과의사와 마주 앉아 상담하는 60대 한국인 여성, 로고 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s sitting and talking with a dentist in a dental clinic, no logos, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 14] 개인 상황에 따라 다르니 전문가와 상담하세요.
+  한글: 공원 벤치에서 함께 웃으며 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s laughing and talking together on a park bench, warm natural light, realistic photo, vertical 9:16, no text in image
