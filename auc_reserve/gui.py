@@ -215,16 +215,24 @@ class App:
         # ── 코트 / 인원 / 제출 ──
         ct = ttk.LabelFrame(f, text=" 코트 / 인원 / 제출 ", padding=8)
         ct.grid(row=1, column=1, sticky="nsew", pady=(8, 0))
-        self.courts_var = tk.StringVar()
+        self.court_order = []           # 체크한 순서 (우선순위)
+        self.court_vars = {}
         self.court_count = tk.StringVar(value="2")
         self.people = tk.StringVar(value="4")
         self.fallback = tk.BooleanVar(value=True)
         self.auto_submit = tk.BooleanVar(value=True)
         self.max_per = tk.StringVar(value="1")
-        ttk.Label(ct, text="원하는 코트").grid(row=0, column=0, sticky="w")
-        ttk.Entry(ct, textvariable=self.courts_var, width=10).grid(row=0, column=1, sticky="w", padx=4)
-        ttk.Label(ct, text="빈칸 = 연번 자동, 예) 6,7", foreground="#666", font=small).grid(
-            row=0, column=2, sticky="w")
+        ttk.Label(ct, text="원하는 코트").grid(row=0, column=0, sticky="nw", pady=2)
+        grid = ttk.Frame(ct)
+        grid.grid(row=0, column=1, columnspan=2, sticky="w", padx=4)
+        for n in range(1, 13):          # 사이트와 같은 배치: 1~4 / 5~8 / 9~12
+            v = tk.IntVar(value=0)
+            ttk.Checkbutton(grid, text=f"{n}번", variable=v, width=5,
+                            command=lambda n=n: self.toggle_court(n)).grid(row=(n - 1) // 4, column=(n - 1) % 4,
+                                                                         sticky="w")
+            self.court_vars[n] = v
+        self.court_hint = ttk.Label(grid, text="", foreground="#666", font=small)
+        self.court_hint.grid(row=3, column=0, columnspan=4, sticky="w")
         ttk.Label(ct, text="코트 수").grid(row=1, column=0, sticky="w", pady=3)
         ttk.Combobox(ct, textvariable=self.court_count, values=["1", "2"], width=4, state="readonly").grid(
             row=1, column=1, sticky="w", padx=4)
@@ -257,6 +265,27 @@ class App:
         f.columnconfigure(0, weight=1)
         f.columnconfigure(1, weight=1)
         return f
+
+    def toggle_court(self, n):
+        if self.court_vars[n].get():
+            if n not in self.court_order:
+                self.court_order.append(n)
+        elif n in self.court_order:
+            self.court_order.remove(n)
+        self.update_court_hint()
+
+    def set_courts(self, nums):
+        self.court_order = list(dict.fromkeys(nums))
+        for n, v in self.court_vars.items():
+            v.set(1 if n in self.court_order else 0)
+        self.update_court_hint()
+
+    def update_court_hint(self):
+        if not self.court_order:
+            self.court_hint.configure(text="체크 안 함 = 빈 코트 중 연번 자동 선택")
+        else:
+            self.court_hint.configure(text="우선 " + " → ".join(f"{n}번" for n in self.court_order)
+                                      + "  (예약돼 있으면 가까운 빈 코트로)")
 
     def update_people_hint(self):
         """코트 수 × 코트당 인원, 감면 인원으로 실제 입력될 값과 할인 적용 여부를 미리 보여 줌."""
@@ -383,7 +412,7 @@ class App:
             self.extras.append({"date": ex["date"], "times": list(ex.get("times", []))})
         self.show_extras()
         self.skip_var.set(", ".join(c.get("skip_dates", [])))
-        self.courts_var.set(",".join(str(x) for x in c.get("courts", [])))
+        self.set_courts([x for x in c.get("courts", []) if isinstance(x, int) and 1 <= x <= 12])
         self.court_count.set(str(c.get("court_count", 2)))
         a = c.get("applicant", {})
         if "people_per_court" in a:
@@ -430,10 +459,7 @@ class App:
         for x in skips:
             datetime.strptime(x, "%Y-%m-%d")
         c["skip_dates"] = skips
-        courts = [x.strip() for x in self.courts_var.get().split(",") if x.strip()]
-        if any(not x.isdigit() or not 1 <= int(x) <= 12 for x in courts):
-            raise ValueError("코트 번호는 1~12 숫자를 쉼표로 구분해 입력하세요. 예) 6,7")
-        c["courts"] = [int(x) for x in courts]
+        c["courts"] = list(self.court_order)
         cnt = int(self.court_count.get())
         ppc = int(self.people.get())
         if not 2 <= ppc <= 6:
