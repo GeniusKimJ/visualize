@@ -1,0 +1,24 @@
+{
+  "open_weekday": "SUN",
+  "open_time": "10:00:00",
+
+  "target_days": [
+    { "weekday": "TUE", "times": ["19:00", "20:00"], "facilities": ["A코트", "B코트"] },
+    { "weekday": "THU", "times": ["20:00", "19:00"], "facilities": ["A코트"] }
+  ],
+  "extra_dates": [],
+  "skip_dates": [],
+  "default_times": ["19:00", "20:00"],
+  "default_facilities": ["A코트"],
+  "max_per_week": 2,
+
+  "applicant": { "인원": 4, "단체명": "", "연락처": "" },
+  "notify": { "telegram_token": "", "chat_id": "", "sound": true },
+
+  "watch_on_fail": "ask",
+  "final_wait_min": 10,
+  "keepalive_min": 10,
+  "max_wait_after_open_min": 30,
+  "ntp_server": "time.google.com",
+  "browser": { "channel": "chrome", "profile_dir": "chrome_profile" }
+}
