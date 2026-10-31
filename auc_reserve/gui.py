@@ -147,7 +147,7 @@ class App:
             (bar2, "open", "▶  오픈 대기 시작", lambda: self.start(["--open", "--yes"]), "Big.TButton"),
             (bar2, "watch", "빈자리 감시", lambda: self.start(["--watch", "--yes"]), None),
             (bar2, "stop", "■  중지", self.stop, None),
-            (bar2, "close", "브라우저 닫기", self.close_browser, None),
+            (bar2, "close", "작업 끝내기", self.close_browser, None),
         ]:
             b = ttk.Button(bar, text=text, command=cmd, style=style) if style else \
                 ttk.Button(bar, text=text, command=cmd)
@@ -540,7 +540,8 @@ class App:
                     box["yes"] = messagebox.askyesno("확인", question)
                     ev.set()
                 elif kind == "state":
-                    self.append(f"{a}  → [브라우저 닫기]를 누르면 종료합니다.", logging.INFO, "ok")
+                    self.append(f"{a}  → [작업 끝내기]를 누르면 끝납니다 (크롬 창은 닫히지 않아 로그인이 유지됩니다).",
+                                logging.INFO, "ok")
                     self.set_running(True)
                 elif kind == "done":
                     self.set_running(False)

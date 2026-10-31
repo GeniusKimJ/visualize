@@ -16,6 +16,7 @@ import logging
 import os
 import random
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -161,6 +162,20 @@ def pick_slot(slots, times):
     return None
 
 
+def find_chrome(configured=""):
+    """설치된 chrome.exe 경로 찾기."""
+    cands = [configured, os.environ.get("AUC_BROWSER_PATH", "")]
+    if sys.platform == "win32":
+        for base in (os.environ.get("ProgramFiles", r"C:\Program Files"),
+                     os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+                     os.environ.get("LOCALAPPDATA", "")):
+            if base:
+                cands.append(os.path.join(base, "Google", "Chrome", "Application", "chrome.exe"))
+    else:
+        cands += ["/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"]
+    return next((c for c in cands if c and os.path.exists(c)), "")
+
+
 def choose_courts(free, want, preferred=(), fallback=True):
     """빈 코트 중 고를 코트 번호 목록.
 
@@ -247,34 +262,86 @@ class Bot:
         self.picked_courts = []
         self.last_access = 0.0
         self.pw = self.ctx = self.page = None
+        self.mode = "launch"
+        self.chrome_proc = None
 
     # ── 시작/종료 ──
     def start(self):
         from playwright.sync_api import sync_playwright
         b = self.cfg["browser"]
-        channel = os.environ.get("AUC_BROWSER_CHANNEL", b["channel"]) or None
         self.pw = sync_playwright().start()
-        self.ctx = self.pw.chromium.launch_persistent_context(
-            user_data_dir=str(BASE / b["profile_dir"]),
-            channel=channel,
-            headless=False,
-            no_viewport=True,
-            args=["--start-maximized"],
-            executable_path=os.environ.get("AUC_BROWSER_PATH") or None,
-        )
+        self.mode = os.environ.get("AUC_BROWSER_MODE", b.get("mode", "cdp"))
+        if self.mode == "cdp":
+            self._start_cdp(b)
+        else:
+            channel = os.environ.get("AUC_BROWSER_CHANNEL", b["channel"]) or None
+            self.ctx = self.pw.chromium.launch_persistent_context(
+                user_data_dir=str(BASE / b["profile_dir"]),
+                channel=channel,
+                headless=False,
+                no_viewport=True,
+                args=["--start-maximized"],
+                executable_path=os.environ.get("AUC_BROWSER_PATH") or None,
+            )
+            self.page = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         self.ctx.set_default_timeout(10_000)
         if self.cfg.get("block_images", True):
             # 이미지/글꼴은 받지 않아 화면 이동을 빠르게 (해당 요청만 가로챔)
             self.ctx.route(re.compile(r"\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf)(\?.*)?$", re.I),
                            lambda r: r.abort())
-        self.page = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         self.page.on("dialog", self._on_dialog)
-        self.ctx.on("page", self._on_new_page)
+        self.page.on("popup", self._on_new_page)
 
-    def stop(self):
+    def _start_cdp(self, b):
+        """평소처럼 실행한 크롬(예약 전용 프로필)에 연결. 이미 열려 있으면 그 크롬을 그대로 사용."""
+        port = int(b.get("cdp_port", 9222))
+        url = f"http://127.0.0.1:{port}"
+        self.browser = None
         try:
-            if self.ctx:
+            self.browser = self.pw.chromium.connect_over_cdp(url, timeout=1500)
+            log.info("열려 있는 크롬에 연결 (포트 %d)", port)
+        except Exception:  # noqa: BLE001
+            path = find_chrome(b.get("chrome_path", ""))
+            if not path:
+                raise RuntimeError("Chrome을 찾지 못했습니다. config.json의 browser.chrome_path에 chrome.exe 경로를 넣어주세요.")
+            args = [path, f"--remote-debugging-port={port}", f"--user-data-dir={BASE / b['profile_dir']}",
+                    "--no-first-run", "--no-default-browser-check", "--start-maximized",
+                    *b.get("extra_args", []), "about:blank"]
+            flags = 0
+            if sys.platform == "win32":
+                flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+            self.chrome_proc = subprocess.Popen(args, creationflags=flags, stdout=subprocess.DEVNULL,
+                                                stderr=subprocess.DEVNULL)
+            log.info("크롬 실행: %s (예약 전용 프로필)", path)
+            deadline = time.monotonic() + 40          # 첫 실행(프로필 생성)은 오래 걸릴 수 있음
+            while time.monotonic() < deadline and not self.browser:
+                if self.chrome_proc.poll() is not None and self.chrome_proc.returncode != 0:
+                    # 일반 크롬이 이미 같은 프로필로 떠 있으면 새 창만 열고 바로 끝나기도 함 → 계속 연결 시도
+                    log.info("크롬 실행 프로세스 종료 (코드 %s) — 연결 계속 시도", self.chrome_proc.returncode)
+                try:
+                    self.browser = self.pw.chromium.connect_over_cdp(url, timeout=2000)
+                except Exception:  # noqa: BLE001
+                    nap(0.5)
+            if not self.browser:
+                raise RuntimeError(f"크롬에 연결하지 못했습니다 (포트 {port}). 크롬 창을 모두 닫고 다시 시도해주세요.")
+        self.ctx = self.browser.contexts[0] if self.browser.contexts else self.browser.new_context()
+        # 예약 사이트 탭이 이미 있으면 그 탭을, 없으면 새 탭을 사용
+        self.page = next((p for p in self.ctx.pages if "auc.or.kr" in p.url), None)
+        if not self.page:
+            blank = [p for p in self.ctx.pages if p.url in ("about:blank", "chrome://newtab/")]
+            self.page = blank[0] if blank else self.ctx.new_page()
+        self.page.bring_to_front()
+
+    def stop(self, close_browser=False):
+        try:
+            if self.mode == "cdp":
+                # 크롬은 닫지 않음 → 로그인 유지, 다음 실행 때 다시 연결
+                if close_browser and self.chrome_proc:
+                    self.chrome_proc.terminate()
+            elif self.ctx:
                 self.ctx.close()
+        except Exception:  # noqa: BLE001
+            pass
         finally:
             if self.pw:
                 self.pw.stop()
@@ -300,7 +367,19 @@ class Bot:
 
     # ── 공통 ──
     def goto(self, url):
-        self.page.goto(url, wait_until="domcontentloaded")
+        try:
+            self.page.goto(url, wait_until="domcontentloaded")
+        except Exception as e:  # noqa: BLE001
+            # 사이트 스크립트(키보드보안 확인 등)가 이동을 가로채면 ERR_ABORTED → 죽지 않고 현재 화면으로 계속
+            msg = str(e)
+            if not any(k in msg for k in ("ERR_ABORTED", "interrupted by another navigation",
+                                          "Download is starting")):
+                raise
+            log.warning("페이지 이동이 중단됨 → 현재 화면(%s)으로 계속", self.page.url)
+            try:
+                self.page.wait_for_load_state("domcontentloaded", timeout=5000)
+            except Exception:  # noqa: BLE001
+                pass
         self.last_access = time.monotonic()
 
     def settle(self, ms=50):
@@ -347,6 +426,8 @@ class Bot:
         if self.check_login():
             return True
         self.goto(S.LOGIN_URL)
+        if "sign/in" not in self.page.url:
+            log.warning("로그인 페이지가 열리지 않았습니다 (%s). 브라우저에서 직접 로그인해주세요.", self.page.url)
         uid = os.environ.get("AUC_ID", "")
         if uid and self.count(S.LOGIN_ID_INPUT):
             self.page.locator(S.LOGIN_ID_INPUT).first.fill(uid)
@@ -1181,7 +1262,7 @@ def run(argv=None, confirm_fn=None, wait_close_fn=None, alert_fn=None):
             # 빌드 확인용: 브라우저를 띄워 간단한 페이지를 그려 보고 바로 종료
             bot.page.set_content("<p id=t>ok</p>")
             assert bot.page.inner_text("#t") == "ok"
-            log.info("SELFTEST OK (브라우저 실행 확인)")
+            log.info("SELFTEST OK (브라우저 실행 확인, 방식: %s)", bot.mode)
             skip_wait = True
         elif args.login:
             bot.ensure_login()
@@ -1226,7 +1307,7 @@ def run(argv=None, confirm_fn=None, wait_close_fn=None, alert_fn=None):
                     input(f"\n{msg} Enter를 누르면 브라우저를 닫고 종료합니다... ")
             except Exception:  # noqa: BLE001  (창 모드 exe에는 콘솔 입력이 없음)
                 pass
-        bot.stop()
+        bot.stop(close_browser=args.selftest)
 
 
 if __name__ == "__main__":

@@ -37,5 +37,5 @@
   "max_wait_after_open_min": 30,
   "ntp_server": "time.google.com",
   "block_images": true,
-  "browser": { "channel": "chrome", "profile_dir": "chrome_profile" }
+  "browser": { "mode": "cdp", "cdp_port": 9222, "chrome_path": "", "channel": "chrome", "profile_dir": "chrome_profile" }
 }
