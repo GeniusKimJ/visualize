@@ -945,7 +945,18 @@ def menu():
     return argv
 
 
+def fix_console_encoding():
+    """출력이 파일/작업 스케줄러로 넘어가면 콘솔 인코딩이 cp1252 등이 되어 한글 출력에서 죽는 것을 방지."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            if stream and (stream.encoding or "").lower().replace("-", "") != "utf8":
+                stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def main():
+    fix_console_encoding()
     from_menu = len(sys.argv) == 1
     argv = menu() if from_menu else None
     if from_menu and argv is None:
