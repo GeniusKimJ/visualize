@@ -60,6 +60,18 @@ def parse_script(folder):
     return script
 
 
+def check_numbers(script):
+    """원고 숫자 기준 (channel-profile.md '원고도 숫자로 말한다'):
+    첫 문장에 아라비아 숫자, 마지막 면책 줄을 뺀 줄의 절반 이상에 숫자."""
+    lines = [l for l in script.split("\n") if l.strip()]
+    if not re.search(r"\d", lines[0]):
+        raise PackError("원고 첫 문장에 숫자(금액·%·기간·개수)가 없습니다. 후킹에 숫자를 넣으세요.")
+    body = lines[:-1]
+    n = sum(1 for l in body if re.search(r"\d", l))
+    if n * 2 < len(body):
+        raise PackError(f"숫자가 들어간 원고 줄이 {n}/{len(body)}줄로 절반이 안 됩니다. 비율은 돈으로 환산하는 등 숫자를 늘리세요.")
+
+
 def parse_scenes(folder, script):
     raw = code_block_after(read(folder, "vrew.md"), r"^", "vrew-scenes")
     if not raw:
@@ -326,6 +338,7 @@ def main():
     try:
         check_gates(folder)
         script = parse_script(folder)
+        check_numbers(script)
         scenes = parse_scenes(folder, script)
         scene_card = parse_numbers(folder)
         up = parse_upload(folder)
