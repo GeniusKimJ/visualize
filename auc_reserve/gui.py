@@ -228,21 +228,51 @@ class App:
         ttk.Label(ct, text="코트 수").grid(row=1, column=0, sticky="w", pady=3)
         ttk.Combobox(ct, textvariable=self.court_count, values=["1", "2"], width=4, state="readonly").grid(
             row=1, column=1, sticky="w", padx=4)
-        ttk.Label(ct, text="사용인원").grid(row=2, column=0, sticky="w")
-        ttk.Spinbox(ct, textvariable=self.people, from_=2, to=12, width=5).grid(row=2, column=1, sticky="w",
-                                                                              padx=4)
-        ttk.Label(ct, text="코트 수×2 ~ ×6명", foreground="#666", font=small).grid(row=2, column=2, sticky="w")
-        ttk.Label(ct, text="최대 예약 건수").grid(row=3, column=0, sticky="w", pady=3)
-        ttk.Spinbox(ct, textvariable=self.max_per, from_=1, to=2, width=5).grid(row=3, column=1, sticky="w",
+        ttk.Label(ct, text="코트당 인원").grid(row=2, column=0, sticky="w")
+        ttk.Spinbox(ct, textvariable=self.people, from_=2, to=6, width=5,
+                    command=self.update_people_hint).grid(row=2, column=1, sticky="w", padx=4)
+        self.people_hint = ttk.Label(ct, text="", foreground="#666", font=small)
+        self.people_hint.grid(row=2, column=2, sticky="w")
+        ttk.Label(ct, text="감면 종류").grid(row=3, column=0, sticky="w", pady=3)
+        self.red_type = tk.StringVar(value="감면 없음")
+        ttk.Combobox(ct, textvariable=self.red_type, state="readonly", width=22,
+                     values=["감면 없음"] + [n for _, n in core.REDUCTION_TYPES]).grid(
+            row=3, column=1, columnspan=2, sticky="w", padx=4)
+        ttk.Label(ct, text="감면 인원").grid(row=4, column=0, sticky="w")
+        self.red_count = tk.StringVar(value="2")
+        self.red_per_court = tk.BooleanVar(value=False)
+        ttk.Spinbox(ct, textvariable=self.red_count, from_=0, to=12, width=5,
+                    command=self.update_people_hint).grid(row=4, column=1, sticky="w", padx=4)
+        ttk.Checkbutton(ct, text="코트 수만큼 곱하기", variable=self.red_per_court,
+                        command=self.update_people_hint).grid(row=4, column=2, sticky="w")
+        ttk.Label(ct, text="최대 예약 건수").grid(row=5, column=0, sticky="w", pady=3)
+        ttk.Spinbox(ct, textvariable=self.max_per, from_=1, to=2, width=5).grid(row=5, column=1, sticky="w",
                                                                               padx=4)
         ttk.Checkbutton(ct, text="지정 코트가 없으면 가까운 빈 코트로", variable=self.fallback).grid(
-            row=4, column=0, columnspan=3, sticky="w")
-        ttk.Checkbutton(ct, text="[예약하기] → [예]까지 자동 (끄면 직전에서 멈춤)", variable=self.auto_submit).grid(
-            row=5, column=0, columnspan=3, sticky="w")
+            row=6, column=0, columnspan=3, sticky="w")
+        ttk.Checkbutton(ct, text="[예약하기] → 환불불가 [예]까지 자동 (끄면 직전에서 멈춤)",
+                        variable=self.auto_submit).grid(row=7, column=0, columnspan=3, sticky="w")
+        self.court_count.trace_add("write", lambda *_: self.update_people_hint())
 
         f.columnconfigure(0, weight=1)
         f.columnconfigure(1, weight=1)
         return f
+
+    def update_people_hint(self):
+        """코트 수 × 코트당 인원, 감면 인원으로 실제 입력될 값과 할인 적용 여부를 미리 보여 줌."""
+        if not hasattr(self, "people_hint"):
+            return
+        try:
+            n, ppc = int(self.court_count.get()), int(self.people.get())
+            rc = int(self.red_count.get() or 0) * (n if self.red_per_court.get() else 1)
+        except ValueError:
+            return
+        total = n * ppc
+        msg = f"= 사용인원 {total}명"
+        if self.red_type.get() != "감면 없음" and rc > 0:
+            ok = total / 2 <= rc
+            msg += f", 감면 {min(rc, total)}명 " + ("(할인 적용)" if ok else f"(할인 미적용: {total // 2 + total % 2}명 이상 필요)")
+        self.people_hint.configure(text=msg, foreground="#1e8449" if "미적용" not in msg else "#c0392b")
 
     # ── 특정 날짜: 날짜 입력 → 그 요일 시간표 체크 → 추가 ──
     def on_ex_date(self):
@@ -355,7 +385,17 @@ class App:
         self.skip_var.set(", ".join(c.get("skip_dates", [])))
         self.courts_var.set(",".join(str(x) for x in c.get("courts", [])))
         self.court_count.set(str(c.get("court_count", 2)))
-        self.people.set(str(c.get("applicant", {}).get("사용인원", 4)))
+        a = c.get("applicant", {})
+        if "people_per_court" in a:
+            self.people.set(str(a["people_per_court"]))
+        else:   # 예전 설정(사용인원 총수)을 코트당 인원으로 환산
+            self.people.set(str(max(2, int(a.get("사용인원", 4)) // max(1, int(c.get("court_count", 1))))))
+        red = c.get("reduction", {})
+        names = dict(core.REDUCTION_TYPES)
+        self.red_type.set(names.get(red.get("type", ""), "감면 없음"))
+        self.red_count.set(str(red.get("count", 2)))
+        self.red_per_court.set(bool(red.get("per_court", False)))
+        self.update_people_hint()
         self.fallback.set(bool(c.get("court_fallback_any", True)))
         self.auto_submit.set(bool(c.get("auto_submit", True)))
         self.max_per.set(str(c.get("max_per_week", 1)))
@@ -395,11 +435,17 @@ class App:
             raise ValueError("코트 번호는 1~12 숫자를 쉼표로 구분해 입력하세요. 예) 6,7")
         c["courts"] = [int(x) for x in courts]
         cnt = int(self.court_count.get())
-        people = int(self.people.get())
-        if not cnt * 2 <= people <= cnt * 6:
-            raise ValueError(f"코트 {cnt}면의 사용인원은 {cnt * 2}~{cnt * 6}명입니다.")
+        ppc = int(self.people.get())
+        if not 2 <= ppc <= 6:
+            raise ValueError("코트당 인원은 2~6명입니다.")
         c["court_count"] = cnt
-        c.setdefault("applicant", {})["사용인원"] = people
+        c["applicant"] = {"people_per_court": ppc}
+        codes = {n: k for k, n in core.REDUCTION_TYPES}
+        rtype = codes.get(self.red_type.get(), "")
+        rcount = int(self.red_count.get() or 0)
+        if rtype and rcount <= 0:
+            raise ValueError("감면 인원을 1명 이상 입력하거나 감면 종류를 '감면 없음'으로 두세요.")
+        c["reduction"] = {"type": rtype, "count": rcount, "per_court": self.red_per_court.get()}
         c["court_fallback_any"] = self.fallback.get()
         c["auto_submit"] = self.auto_submit.get()
         c["max_per_week"] = int(self.max_per.get())

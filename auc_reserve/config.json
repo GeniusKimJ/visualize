@@ -11,32 +11,63 @@
   "open_offset_ms": 30,
   "turbo": true,
   "open_weekday": "SUN",
-
   "target_days": [
-    { "weekday": "TUE", "times": ["18:50", "20:30"], "facilities": [] },
-    { "weekday": "THU", "times": ["20:30", "18:50"], "facilities": [] }
+    {
+      "weekday": "TUE",
+      "times": [
+        "18:50",
+        "20:30"
+      ],
+      "facilities": []
+    },
+    {
+      "weekday": "THU",
+      "times": [
+        "20:30",
+        "18:50"
+      ],
+      "facilities": []
+    }
   ],
   "extra_dates": [],
   "skip_dates": [],
-  "default_times": ["18:50", "20:30"],
+  "default_times": [
+    "18:50",
+    "20:30"
+  ],
   "default_facilities": [],
   "max_per_week": 1,
-
   "courts": [],
   "court_count": 2,
   "court_fallback_any": true,
-  "applicant": { "사용인원": 4 },
+  "applicant": {
+    "people_per_court": 4
+  },
   "auto_submit": true,
   "login_type": "sso",
   "retry_on_conflict": 1,
   "auto_agree_terms": false,
-  "notify": { "telegram_token": "", "chat_id": "", "sound": true },
-
+  "notify": {
+    "telegram_token": "",
+    "chat_id": "",
+    "sound": true
+  },
   "watch_on_fail": "ask",
   "final_wait_min": 10,
   "keepalive_min": 5,
   "max_wait_after_open_min": 30,
   "ntp_server": "time.google.com",
   "block_images": true,
-  "browser": { "mode": "cdp", "cdp_port": 9222, "chrome_path": "", "channel": "chrome", "profile_dir": "chrome_profile" }
+  "browser": {
+    "mode": "cdp",
+    "cdp_port": 9222,
+    "chrome_path": "",
+    "channel": "chrome",
+    "profile_dir": "chrome_profile"
+  },
+  "reduction": {
+    "type": "",
+    "count": 2,
+    "per_court": false
+  }
 }

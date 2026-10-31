@@ -52,3 +52,28 @@ class PreferredMode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+from main import form_values  # noqa: E402
+
+
+class FormValues(unittest.TestCase):
+    def test_people_per_court(self):
+        cfg = {"applicant": {"people_per_court": 4}, "reduction": {"type": "reduction3", "count": 2}}
+        self.assertEqual(form_values(cfg, 1), (4, {"reduction3": 2}))
+        self.assertEqual(form_values(cfg, 2), (8, {"reduction3": 2}))
+
+    def test_reduction_per_court(self):
+        cfg = {"applicant": {"people_per_court": 4},
+               "reduction": {"type": "reduction4", "count": 2, "per_court": True}}
+        self.assertEqual(form_values(cfg, 2), (8, {"reduction4": 4}))
+
+    def test_no_reduction_type(self):
+        cfg = {"applicant": {"people_per_court": 4}, "reduction": {"type": "", "count": 2}}
+        self.assertEqual(form_values(cfg, 1), (4, {}))
+
+    def test_limits(self):
+        self.assertEqual(form_values({"applicant": {"people_per_court": 9}}, 1)[0], 6)
+        self.assertEqual(form_values({"applicant": {"사용인원": 4}}, 2)[0], 4)
+        cfg = {"applicant": {"people_per_court": 2}, "reduction": {"type": "reduction1", "count": 5}}
+        self.assertEqual(form_values(cfg, 1), (2, {"reduction1": 2}))

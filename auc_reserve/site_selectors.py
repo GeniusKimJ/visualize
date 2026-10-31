@@ -51,10 +51,8 @@ SELECT_CONFIRM_TEXTS = ["등록하시겠습니까"]
 COURT_CHECKBOX = 'input[type="checkbox"][name="facilityNo"]'   # value = 코트 번호 1~12
 COURT_MAX = 2                                                   # 사이트 제한: 최대 2면
 
-# 2) 사용인원 화면: config.json applicant의 키 → 입력칸
-APPLICANT_FIELDS = {
-    "사용인원": "#userCnt",      # 코트 수 × 2 이상, × 6 이하
-}
+# 2) 사용인원 화면: 사용인원 #userCnt (코트 수 × 2 ~ × 6), 감면 인원 input[name=reduction1..7]
+PEOPLE_INPUT = "#userCnt"
 AFTER_FILL_JS = "typeof changePrice === 'function' && changePrice()"   # 요금 다시 계산
 AGREE_CHECKBOXES = 'input[type="checkbox"][name*="agree" i]'           # 이 사이트엔 없음
 
@@ -117,10 +115,15 @@ TURBO_COURT_JS = """([nos, nextText]) => {
   return 'ok';
 }"""
 # ③ 인원 입력 → (submit이면) [예약하기] → '환불 불가에 동의…' [예]
-TURBO_SUBMIT_JS = """async ([cnt, submit, expect]) => {
+TURBO_SUBMIT_JS = """async ([cnt, submit, expect, reds]) => {
   const u = document.querySelector('#userCnt');
   if (!u) return 'no-usercnt';
   u.value = String(cnt);
+  for (const [name, v] of Object.entries(reds || {})) {
+    const r = document.querySelector('input[name="' + name + '"]');
+    if (!r) return 'no-' + name;
+    r.value = String(v);
+  }
   if (typeof changePrice === 'function') changePrice();
   if (!submit) return 'filled';
   const btn = [...document.querySelectorAll('a.btn4')].find(a => a.textContent.includes('""" + SUBMIT_BTN_TEXT + """'));

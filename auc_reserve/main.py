@@ -171,6 +171,28 @@ def pick_slot(slots, times):
     return None
 
 
+REDUCTION_TYPES = [
+    ("reduction1", "국가유공자"), ("reduction2", "장애인"), ("reduction3", "경로우대자"),
+    ("reduction4", "안양시 다자녀"), ("reduction5", "우수자원봉사자"),
+    ("reduction6", "장기 및 신체조직 기증자"), ("reduction7", "군·경·소(안양거주/재직)"),
+]
+
+
+def form_values(cfg, courts_n):
+    """사용인원과 감면 인원 계산. 반환: (사용인원, {"reduction3": 2} 같은 감면 입력값)."""
+    courts_n = max(1, courts_n)
+    a = cfg.get("applicant", {})
+    ppc = a.get("people_per_court")
+    cnt = courts_n * int(ppc) if ppc else int(a.get("사용인원", courts_n * 2))
+    cnt = max(courts_n * 2, min(cnt, courts_n * 6))          # 사이트 제한: 코트당 2~6명
+    red = cfg.get("reduction", {})
+    rtype, rc = red.get("type", ""), int(red.get("count", 0) or 0)
+    if red.get("per_court"):
+        rc *= courts_n
+    rc = min(rc, cnt)                                        # 감면 인원은 사용인원 이하
+    return cnt, ({rtype: rc} if rtype and rc > 0 else {})
+
+
 def find_chrome(configured=""):
     """설치된 chrome.exe 경로 찾기."""
     cands = [configured, os.environ.get("AUC_BROWSER_PATH", "")]
@@ -674,25 +696,20 @@ class Bot:
 
     # ── 신청서 → 최종 직전 ──
     def fill_applicant(self):
-        for key, sel in S.APPLICANT_FIELDS.items():
-            val = self.cfg.get("applicant", {}).get(key)
-            if val in (None, "") or not self.count(sel):
-                continue
-            el = self.page.locator(sel).first
-            try:
-                tag = el.evaluate("e => e.tagName").lower()
-                if tag == "select":
-                    try:
-                        el.select_option(label=str(val))
-                    except Exception:  # noqa: BLE001
-                        el.select_option(value=str(val))
-                else:
-                    el.fill(str(val))
-                log.info("신청서 입력: %s", key)
-                if S.AFTER_FILL_JS:
-                    self.page.evaluate(S.AFTER_FILL_JS)
-            except Exception as e:  # noqa: BLE001
-                log.warning("신청서 입력 실패(%s): %s", key, e)
+        """사용인원 화면이면 인원(코트 수 × 코트당 인원)과 감면 인원을 입력하고 요금을 다시 계산."""
+        if not self.count(S.PEOPLE_INPUT):
+            return
+        n = len(self.picked_courts) or int(self.cfg.get("court_count", 1))
+        cnt, reds = form_values(self.cfg, n)
+        try:
+            self.page.locator(S.PEOPLE_INPUT).first.fill(str(cnt))
+            for name, v in reds.items():
+                self.page.locator(f'input[name="{name}"]').first.fill(str(v))
+            if S.AFTER_FILL_JS:
+                self.page.evaluate(S.AFTER_FILL_JS)
+            log.info("사용인원 %d명, 감면 %s", cnt, reds or "없음")
+        except Exception as e:  # noqa: BLE001
+            log.warning("인원 입력 실패: %s", e)
 
     def select_courts(self):
         """코트 선택 화면이면 규칙대로 체크. 반환: 선택한 코트 번호 목록 (화면이 아니면 None)."""
@@ -872,13 +889,13 @@ class Bot:
         label += " 코트 " + ",".join(f"{n}번" for n in pick)
         # ③ 인원 입력 (+ [예약하기] → [예])
         submit = bool(self.cfg.get("auto_submit"))
-        cnt = int(self.cfg.get("applicant", {}).get("사용인원", want * 2))
+        cnt, reds = form_values(self.cfg, len(pick))
         self.last_dialog = ""
         url = self.page.url
-        r = self._turbo_eval(S.TURBO_SUBMIT_JS, [cnt, submit, S.CONFIRM_EXPECT_TEXTS])
+        r = self._turbo_eval(S.TURBO_SUBMIT_JS, [cnt, submit, S.CONFIRM_EXPECT_TEXTS, reds])
         t3 = time.monotonic()
-        log.info("터보 소요: 시간선택 %.0fms / 코트 %.0fms / 제출 %.0fms (빈 코트 %s → %s)",
-                 (t1 - t0) * 1000, (t2 - t1) * 1000, (t3 - t2) * 1000, free, pick)
+        log.info("터보 소요: 시간선택 %.0fms / 코트 %.0fms / 제출 %.0fms (빈 코트 %s → %s, 인원 %d, 감면 %s)",
+                 (t1 - t0) * 1000, (t2 - t1) * 1000, (t3 - t2) * 1000, free, pick, cnt, reds or "없음")
         if not submit:
             if r == "filled":
                 self.n.alert(f"{label}, [예약하기] → [예]를 눌러주세요")
