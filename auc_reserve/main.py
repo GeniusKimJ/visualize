@@ -76,6 +76,10 @@ def load_config(path):
     cfg.setdefault("poll_interval_sec", 1.0)      # 집중 감시 간격
     cfg.setdefault("fast_window_sec", 20)         # 예상 시각 ±이 초 안에서는
     cfg.setdefault("fast_poll_interval_sec", 0.5) # 더 촘촘하게
+    cfg.setdefault("burst_window_sec", 3)         # 오픈 ±이 초 안에서는
+    cfg.setdefault("burst_interval_sec", 0.3)     # 최소 간격으로
+    cfg.setdefault("open_offset_ms", 30)          # 오픈 순간 + 이 ms에 반드시 한 번 확인
+    cfg.setdefault("turbo", True)                 # 화면마다 스크립트 한 번으로 처리 (빠름)
     cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
     cfg.setdefault("auto_submit", False)          # true: [예약하기] → [예]까지 자동 (결제는 직접)
     cfg.setdefault("retry_on_conflict", 1)        # 먼저 예약돼 실패하면 다시 시도할 횟수
@@ -89,6 +93,7 @@ def load_config(path):
     # 서버 부하 방지: 감시 간격 하한 0.3초
     cfg["poll_interval_sec"] = max(0.3, float(cfg["poll_interval_sec"]))
     cfg["fast_poll_interval_sec"] = max(0.3, float(cfg["fast_poll_interval_sec"]))
+    cfg["burst_interval_sec"] = max(0.3, float(cfg["burst_interval_sec"]))
     return cfg
 
 
@@ -605,11 +610,18 @@ class Bot:
             return False, f"예상과 다른 확인창: {txt}"
         log.info("확인창 '%s' → [예]", txt)
         self.page.locator(S.CONFIRM_YES).click()
-        try:
-            self.page.wait_for_url(lambda u: u != url, timeout=10000, wait_until="domcontentloaded")
-        except Exception:  # noqa: BLE001
-            pass
-        self.settle(300)
+        return self.after_submit(url)
+
+    def after_submit(self, url):
+        """[예]를 누른 뒤: 결제 화면(예약번호) 도착 여부로 성공/실패 판정."""
+        # 결제 화면(예약번호) 또는 실패 경고창 중 먼저 오는 쪽을 20ms 간격으로 확인
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            if any(k in self.last_dialog for k in S.SUBMIT_FAIL_TEXTS):
+                break
+            if self.page.url != url and self.count(S.STEP3_MARKER):
+                break
+            nap(0.02)
         if any(k in self.last_dialog for k in S.SUBMIT_FAIL_TEXTS):
             return False, self.last_dialog
         if self.count(S.STEP3_MARKER):
@@ -642,6 +654,82 @@ class Bot:
         finally:
             self.phase = "auto"
 
+    # ── 터보: 화면마다 스크립트 한 번으로 처리 (찾기/확인/클릭 왕복을 없앰) ──
+    def _turbo_eval(self, js, arg):
+        """페이지 이동을 일으키는 스크립트 실행. 이동 때문에 결과를 못 받아도 'nav'로 본다."""
+        try:
+            return self.page.evaluate(js, arg)
+        except Exception as e:  # noqa: BLE001
+            return "nav" if "context" in str(e).lower() or "navigat" in str(e).lower() else f"error:{e}"
+
+    def _wait_url(self, part, timeout=8000):
+        try:
+            self.page.wait_for_url(lambda u: part in u, timeout=timeout, wait_until="domcontentloaded")
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+
+    def turbo_book(self, tg, fast):
+        """반환: (상태, 설명) 또는 None(일반 방식으로 이어서 진행)."""
+        t0 = time.monotonic()
+        label = f"{tg.label()} {fast[0]}"
+        if not self.page.evaluate("typeof fn_facilityResSelect === 'function'"):
+            return None
+        # ① 시간 선택 + '등록하시겠습니까?' [예]
+        url = self.page.url
+        r = self._turbo_eval(S.TURBO_SELECT_JS, [fast[1], S.SELECT_CONFIRM_TEXTS])
+        if r not in ("ok", "nav") or not self._wait_url("reservationStep2"):
+            log.info("터보 ① 실패(%s) → 일반 방식", r)
+            return None
+        t1 = time.monotonic()
+        # ② 코트 체크 + [다음]
+        info = self.page.locator(S.COURT_CHECKBOX).evaluate_all(
+            "els => els.map(e => ({no: parseInt(e.value), ok: !e.disabled && !/\\bver-/.test(e.className)}))")
+        free = [c["no"] for c in info if c["ok"]]
+        want = max(1, min(int(self.cfg.get("court_count", 1)), S.COURT_MAX))
+        pick = choose_courts(free, want, self.cfg.get("courts", []), self.cfg.get("court_fallback_any", True))
+        if not pick:
+            self.no_court = True
+            return "마감", label + " (빈 코트 없음)"
+        self.picked_courts = pick
+        r = self._turbo_eval(S.TURBO_COURT_JS, [pick, S.NEXT_BTN_TEXT])
+        if r not in ("ok", "nav") or not self._wait_url("reservationStep2_2"):
+            log.info("터보 ② 실패(%s) → 일반 방식", r)
+            return None
+        t2 = time.monotonic()
+        label += " 코트 " + ",".join(f"{n}번" for n in pick)
+        # ③ 인원 입력 (+ [예약하기] → [예])
+        submit = bool(self.cfg.get("auto_submit"))
+        cnt = int(self.cfg.get("applicant", {}).get("사용인원", want * 2))
+        self.last_dialog = ""
+        url = self.page.url
+        r = self._turbo_eval(S.TURBO_SUBMIT_JS, [cnt, submit, S.CONFIRM_EXPECT_TEXTS])
+        t3 = time.monotonic()
+        log.info("터보 소요: 시간선택 %.0fms / 코트 %.0fms / 제출 %.0fms (빈 코트 %s → %s)",
+                 (t1 - t0) * 1000, (t2 - t1) * 1000, (t3 - t2) * 1000, free, pick)
+        if not submit:
+            if r == "filled":
+                self.n.alert(f"{label}, [예약하기] → [예]를 눌러주세요")
+                if self.wait_user_complete(self.cfg["final_wait_min"]):
+                    return "성공", label
+                return "미완료", label + f" ({self.cfg['final_wait_min']}분 내 완료 미확인)"
+            log.info("터보 ③ 실패(%s) → 일반 방식", r)
+            return None
+        if r not in ("ok", "nav"):
+            why = f"제출 확인창 문제: {r} {self.last_dialog}".strip()
+            self.screenshot("submit_fail")
+            self.n.alert(f"{label} 자동 제출 실패: {why}. 화면을 확인해주세요")
+            return "실패", f"{label} ({why})"
+        sent, why = self.after_submit(url)
+        log.info("자동 제출 %s (오픈 감지 후 %.0fms): %s", "완료" if sent else "실패",
+                 (time.monotonic() - t0) * 1000, why)
+        if sent:
+            self.n.alert(f"{label} 자리 확보 ({why})! 브라우저에서 [결제하기]를 눌러 결제해주세요")
+            return "성공", f"{label} ({why}, 결제 필요)"
+        self.screenshot("submit_fail")
+        self.n.alert(f"{label} 자동 제출 실패: {why.rstrip('.')}. 화면을 확인해주세요")
+        return "실패", f"{label} ({why})"
+
     def try_book(self, tg, fast=None):
         """반환: (상태, 설명). 상태 = 성공 | 마감 | 미완료 | 실패
 
@@ -653,6 +741,14 @@ class Bot:
         self.picked_courts = []
         try:
             done = False
+            if fast and self.cfg.get("turbo", True):
+                r = self.turbo_book(tg, fast)
+                if r:
+                    return r
+                # 터보가 중간에 실패: 이미 코트/인원 화면이면 거기서부터 일반 방식으로 이어감
+                if "reservationStep2" in self.page.url:
+                    done, fast = True, None
+                    label = f"{tg.label()} (진행 중이던 화면에서 계속)"
             if fast:
                 t0 = time.monotonic()
                 label = f"{tg.label()} {fast[0]}"
@@ -724,7 +820,16 @@ def book_all(bot, targets, cfg, fast_first=None):
             if status != "실패" or not any(k in detail for k in ("이미", "마감", "초과")):
                 break
             log.info("충돌로 실패 → 남은 시간/코트로 재시도")
-            status, detail = bot.try_book(tg)
+            retry_fast = None
+            try:
+                st, _ = bot.fetch_calendar(tg.day)       # 달력 HTML만 다시 받아 남은 시간 확인
+                if st and st["opened"]:
+                    retry_fast = pick_slot(st["slots"], tg.times)
+                    if retry_fast:
+                        bot.goto_calendar(tg.day)        # 시간 선택 함수가 있는 달력 화면으로
+            except Exception:  # noqa: BLE001
+                pass
+            status, detail = bot.try_book(tg, retry_fast)
         log.info("결과 %s: %s %s", tg.label(), status, detail)
         results.append((tg, status, detail))
         if status == "성공":
@@ -822,8 +927,16 @@ def wait_until_open(bot, clock, cfg, open_dt, first):
         if past > cfg["max_wait_after_open_min"] * 60:
             bot.n.alert("오픈 대기 시간을 초과해 중단합니다.")
             return False, None
-        interval = 5.0 if slowed else (cfg["fast_poll_interval_sec"] if near else cfg["poll_interval_sec"])
-        nap(interval - (time.monotonic() - t0))
+        to_open = (open_dt - clock.now()).total_seconds()
+        burst = abs(to_open) <= cfg["burst_window_sec"]
+        interval = 5.0 if slowed else (cfg["burst_interval_sec"] if burst else
+                                       cfg["fast_poll_interval_sec"] if near else cfg["poll_interval_sec"])
+        wait = interval - (time.monotonic() - t0)
+        # 다음 확인이 오픈 순간을 건너뛰게 되면, 오픈 순간(+open_offset_ms)에 정확히 한 번 확인
+        hit = to_open + cfg["open_offset_ms"] / 1000
+        if 0 < hit < wait:
+            wait = hit
+        nap(wait)
 
 
 def run_watch(bot, targets, cfg, already_booked=0):
@@ -924,13 +1037,17 @@ def dry_run(open_dt, cfg):
         (open_dt - win - timedelta(minutes=1), "로그인 점검 + 목표 날짜 달력 열어 두기"),
         (open_dt - win, f"집중 감시 시작: 달력 HTML만 {cfg['poll_interval_sec']}초 간격으로 확인"),
         (open_dt - timedelta(seconds=fw), f"예상 시각 ±{fw}초: {cfg['fast_poll_interval_sec']}초 간격"),
-        (open_dt, "예상 오픈 시각"),
+        (open_dt - timedelta(seconds=cfg["burst_window_sec"]),
+         f"예상 시각 ±{cfg['burst_window_sec']}초: {cfg['burst_interval_sec']}초 간격"),
+        (open_dt + timedelta(milliseconds=cfg["open_offset_ms"]), "오픈 순간 확인 (반드시 1회)"),
         (open_dt + win, "집중 감시 끝 → 안 열렸으면 5초 간격 + 알림"),
         (open_dt + timedelta(minutes=cfg["max_wait_after_open_min"]), "대기 중단"),
     ]
     for when, what in plan:
         out(f"  {fmt_dt(when)}  {what}")
-    out("  열림 감지 즉시: 떠 있는 달력에서 시간 선택 → 코트 선택 → 인원 입력 → [예약하기] 직전 알림")
+    end = "[예약하기] → [예]까지 자동" if cfg.get("auto_submit") else "[예약하기] 직전에서 멈추고 알림"
+    mode = "터보(화면마다 한 번에 처리)" if cfg.get("turbo", True) else "일반"
+    out(f"  열림 감지 즉시 ({mode}): 시간 선택 → 등록 [예] → 코트 → [다음] → 인원 → {end}")
 
 
 MENU = [

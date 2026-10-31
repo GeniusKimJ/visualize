@@ -85,6 +85,47 @@ STEP3_RES_NO = '#paymentForm input[name="facilityResNo"]'
 STEP3_AGREES = ["#list-2", "#list-3", "#list-4"]   # 개인정보 수집, 제3자 제공, 취소수수료 동의 (필수)
 PAY_BUTTON = "a.join-next-btn"                    # [결제하기] — 스크립트는 절대 누르지 않음
 
+# ── 터보 모드 스크립트 (화면마다 한 번 실행) ─────────────────
+NEXT_BTN_TEXT = "다음"
+SUBMIT_BTN_TEXT = "예약하기"
+
+# 확인 레이어(.confirm_layer_box > .txt)에 문구가 뜨면 기대 문구인지 보고 confirm_layer_close(true) = [예]
+_LAYER_YES = """
+  for (let i = 0; i < 200; i++) {
+    const t = ((document.querySelector('.confirm_layer_box > .txt') || {}).textContent || '').trim();
+    if (t) {
+      if (!expect.some(k => t.includes(k))) return 'unexpected:' + t;
+      confirm_layer_close(true);
+      return 'ok';
+    }
+    await new Promise(r => setTimeout(r, 5));
+  }
+  return 'no-layer';
+"""
+# ① 달력: 사이트의 시간 선택 함수 실행 → '등록하시겠습니까?' [예]
+TURBO_SELECT_JS = "async ([call, expect]) => { (0, eval)(call);" + _LAYER_YES + "}"
+# ② 코트 선택: 고른 코트만 체크(change 이벤트로 사이트 검사 실행) → [다음]
+TURBO_COURT_JS = """([nos, nextText]) => {
+  document.querySelectorAll('input[type=checkbox][name=facilityNo]').forEach(b => {
+    const want = nos.includes(parseInt(b.value));
+    if (b.checked !== want) { b.checked = want; b.dispatchEvent(new Event('change', {bubbles: true})); }
+  });
+  const next = [...document.querySelectorAll('a.btn4')].find(a => a.textContent.includes(nextText));
+  if (!next) return 'no-next';
+  next.click();
+  return 'ok';
+}"""
+# ③ 인원 입력 → (submit이면) [예약하기] → '환불 불가에 동의…' [예]
+TURBO_SUBMIT_JS = """async ([cnt, submit, expect]) => {
+  const u = document.querySelector('#userCnt');
+  if (!u) return 'no-usercnt';
+  u.value = String(cnt);
+  if (typeof changePrice === 'function') changePrice();
+  if (!submit) return 'filled';
+  const btn = [...document.querySelectorAll('a.btn4')].find(a => a.textContent.includes('""" + SUBMIT_BTN_TEXT + """'));
+  if (!btn) return 'no-submit';
+  btn.click();""" + _LAYER_YES + "}"
+
 # ── 완료 감지 ────────────────────────────────────────────
 # [예]를 누르면 reservationStep3로 제출된다. 그 뒤 결제 화면은 아직 미확인.
 COMPLETE_TEXTS = ["예약이 완료", "예약완료되었습니다", "결제가 완료", "신청되었습니다"]

@@ -6,6 +6,10 @@
   "poll_interval_sec": 1.0,
   "fast_window_sec": 20,
   "fast_poll_interval_sec": 0.5,
+  "burst_window_sec": 3,
+  "burst_interval_sec": 0.3,
+  "open_offset_ms": 30,
+  "turbo": true,
   "open_weekday": "SUN",
 
   "target_days": [

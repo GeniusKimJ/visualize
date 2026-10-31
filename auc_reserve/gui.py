@@ -52,7 +52,7 @@ class TimePicker:
             v, txt = tk.IntVar(value=0), tk.StringVar(value="  ")
             cb = ttk.Checkbutton(parent, variable=v, textvariable=txt, width=3,
                                  command=lambda t=t: self.toggle(t))
-            cb.grid(row=row, column=col0 + j, padx=2, pady=1)
+            cb.grid(row=row, column=col0 + j, padx=6, pady=2)
             self.vars[t], self.texts[t], self.boxes[t] = v, txt, cb
 
     def toggle(self, t):
@@ -95,8 +95,8 @@ class App:
         self.env_path = core.BASE / ".env"
 
         root.title("배드민턴장 예약 도우미 (안양도시공사 호계체육관)")
-        root.geometry("960x900")
-        root.minsize(900, 760)
+        root.geometry("1120x980")
+        root.minsize(1040, 820)
         style = ttk.Style()
         try:
             style.theme_use("vista" if sys.platform == "win32" else "clam")
@@ -129,7 +129,7 @@ class App:
         ttk.Label(top, textvariable=self.plan_var, style="Status.TLabel").pack(anchor="w")
         ttk.Label(top, textvariable=self.count_var).pack(anchor="w")
 
-        nb = ttk.Notebook(self.root)
+        nb = self.nb = ttk.Notebook(self.root)
         nb.pack(fill="x", padx=12, pady=4)
         nb.add(self.build_main_tab(nb), text="  예약 설정  ")
         nb.add(self.build_adv_tab(nb), text="  고급 설정  ")
@@ -157,7 +157,7 @@ class App:
 
         logf = ttk.LabelFrame(self.root, text=" 진행 기록 ", padding=6)
         logf.pack(fill="both", expand=True, padx=12, pady=(4, 12))
-        self.logbox = scrolledtext.ScrolledText(logf, height=14, font=("맑은 고딕", 9), state="disabled")
+        self.logbox = scrolledtext.ScrolledText(logf, height=18, font=("맑은 고딕", 9), state="disabled")
         self.logbox.pack(fill="both", expand=True)
         self.logbox.tag_config("warn", foreground="#c0392b")
         self.logbox.tag_config("ok", foreground="#1e8449")
@@ -170,14 +170,14 @@ class App:
         days = ttk.LabelFrame(f, text=" 매주 예약할 요일과 시간 — 체크한 순서가 우선순위 (1 → 2 → …) ", padding=8)
         days.grid(row=0, column=0, columnspan=2, sticky="nsew")
         for j, t in enumerate(WEEK_TIMES):
-            ttk.Label(days, text=t, font=("맑은 고딕", 9, "bold")).grid(row=0, column=1 + j, padx=2)
+            ttk.Label(days, text=t, font=("맑은 고딕", 9, "bold")).grid(row=0, column=1 + j, padx=6)
         self.day_pick = {}
         for i, wd in enumerate(WEEKDAY_KEYS[:6]):
             ttk.Label(days, text=WEEKDAY_KO[i] + "요일").grid(row=1 + i, column=0, sticky="w", padx=(0, 8))
             self.day_pick[wd] = TimePicker(days, WEEK_TIMES, 1 + i, 1)
         for j, t in enumerate(SUN_TIMES):
             ttk.Label(days, text=t, font=("맑은 고딕", 9, "bold"), foreground="#c0392b").grid(
-                row=7, column=1 + j, padx=2, pady=(6, 0))
+                row=7, column=1 + j, padx=6, pady=(6, 0))
         ttk.Label(days, text="일요일", foreground="#c0392b").grid(row=8, column=0, sticky="w")
         self.day_pick["SUN"] = TimePicker(days, SUN_TIMES, 8, 1)
         ttk.Button(days, text="전체 해제", command=lambda: [p.clear() for p in self.day_pick.values()]).grid(
@@ -297,6 +297,7 @@ class App:
             ("open_window_min", "집중 감시 범위(±분)", "1"),
             ("poll_interval_sec", "감시 간격(초, 최소 0.3)", "1.0"),
             ("fast_poll_interval_sec", "오픈 ±20초 간격(초)", "0.5"),
+            ("burst_interval_sec", "오픈 ±3초 간격(초, 최소 0.3)", "0.3"),
             ("telegram_token", "텔레그램 봇 토큰", ""),
             ("chat_id", "텔레그램 chat_id", ""),
             ("auc_id", "사이트 아이디 (자동 입력용)", ""),
@@ -304,14 +305,17 @@ class App:
         for i, (key, label, default) in enumerate(rows):
             ttk.Label(f, text=label).grid(row=i, column=0, sticky="w", pady=2)
             v = tk.StringVar(value=default)
-            ttk.Entry(f, textvariable=v, width=42, show="*" if key == "telegram_token" else "").grid(
-                row=i, column=1, sticky="w", padx=8)
+            ttk.Entry(f, textvariable=v, width=46, show="*" if key == "telegram_token" else "").grid(
+                row=i, column=1, columnspan=2, sticky="w", padx=8)
             self.adv[key] = v
         self.sound = tk.BooleanVar(value=True)
         self.block_images = tk.BooleanVar(value=True)
+        self.turbo = tk.BooleanVar(value=True)
         ttk.Checkbutton(f, text="알림 소리", variable=self.sound).grid(row=len(rows), column=0, sticky="w")
         ttk.Checkbutton(f, text="이미지 차단 (화면 이동 빠르게)", variable=self.block_images).grid(
             row=len(rows), column=1, sticky="w", padx=8)
+        ttk.Checkbutton(f, text="터보 모드 (화면마다 한 번에 처리 — 가장 빠름)", variable=self.turbo).grid(
+            row=len(rows), column=2, sticky="w", padx=8)
         ttk.Label(f, text="비밀번호는 키보드보안 때문에 저장하지 않습니다. 로그인 창이 뜨면 직접 입력하세요.",
                   foreground="#666", font=("맑은 고딕", 8)).grid(row=len(rows) + 1, column=0, columnspan=2,
                                                               sticky="w", pady=(8, 0))
@@ -346,7 +350,7 @@ class App:
         self.auto_submit.set(bool(c.get("auto_submit", True)))
         self.max_per.set(str(c.get("max_per_week", 1)))
         for key in ("open_time", "open_days_before", "open_window_min", "poll_interval_sec",
-                    "fast_poll_interval_sec"):
+                    "fast_poll_interval_sec", "burst_interval_sec"):
             if key in c:
                 self.adv[key].set(str(c[key]))
         n = c.get("notify", {})
@@ -354,6 +358,7 @@ class App:
         self.adv["chat_id"].set(str(n.get("chat_id", "")))
         self.sound.set(bool(n.get("sound", True)))
         self.block_images.set(bool(c.get("block_images", True)))
+        self.turbo.set(bool(c.get("turbo", True)))
         self.adv["auc_id"].set(self.read_env_id())
 
     def collect(self):
@@ -390,6 +395,8 @@ class App:
         c["open_window_min"] = float(self.adv["open_window_min"].get())
         c["poll_interval_sec"] = max(0.3, float(self.adv["poll_interval_sec"].get()))
         c["fast_poll_interval_sec"] = max(0.3, float(self.adv["fast_poll_interval_sec"].get()))
+        c["burst_interval_sec"] = max(0.3, float(self.adv["burst_interval_sec"].get()))
+        c["turbo"] = self.turbo.get()
         c["notify"] = {"telegram_token": self.adv["telegram_token"].get().strip(),
                        "chat_id": self.adv["chat_id"].get().strip(), "sound": self.sound.get()}
         c["block_images"] = self.block_images.get()
