@@ -1,0 +1,52 @@
+[장면 1] 65세부터 의원비 1,500원일 때 있어요.
+  한글: 밝은 동네 의원 대기실 의자에 앉아 미소 짓는 60대 한국인 부부, 간판·글자 없음, 위쪽은 흐린 흰 벽, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s smiling while seated in a bright small clinic waiting room, no signs or text, plain soft white wall in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 2] 총진료비 구간에 따라 내는 돈이 정해져요.
+  한글: 탁자 위 계산기와 종이 한 장, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: a calculator and a sheet of paper on a table, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 3] 총진료비가 1만 5천 원 이하면
+  한글: 진료실 앞 대기 의자에 앉아 차례를 기다리는 60대 한국인 남성, 간판 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean man in his 60s waiting his turn on a bench in front of a clinic room, no signs, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 4] 1,500원만 내요.
+  한글: 의원 접수대에서 카드로 계산하는 60대 한국인 여성의 손, 화면 글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: hand of a korean woman in her 60s paying with a card at a clinic reception desk, no screen text, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 5] 1만 5천 원을 넘으면 구간별로 달라요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 6] 2만 원까지는 10%,
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 7] 2만 5천 원까지는 20%,
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 8] 그보다 많으면 30%예요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 9] 표를 보시면, 2만 원 진료는 2,000원.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 10] 65세 미만은 보통 30%, 6,000원이죠.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 11] 2만 5천 원을 넘으면 똑같이 30%예요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 12] 동네 의원 외래 진료 기준이고,
+  한글: 주택가 골목의 작은 2층 건물 입구로 걸어가는 60대 한국인 여성, 간판·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s walking toward the entrance of a small two-story building on a residential street, no signs or text, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 13] 병원급과 약국은 기준이 달라요.
+  한글: 넓은 종합병원 로비와 약 진열장이 있는 약국 카운터를 나란히 보여 주는 장면, 로고·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: a spacious hospital lobby and a pharmacy counter with medicine shelves shown side by side, no logos or text, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 14] 진료비 영수증으로 한번 확인해 보세요.
+  한글: 거실 탁자에서 종이 영수증을 함께 들여다보는 60대 한국인 부부, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s looking at a paper receipt together at a living room table, text blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 15] 개인 상황에 따라 다르니 전문가와 상담하세요.
+  한글: 상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s talking with a counselor at a consultation desk, warm natural light, realistic photo, vertical 9:16, no text in image

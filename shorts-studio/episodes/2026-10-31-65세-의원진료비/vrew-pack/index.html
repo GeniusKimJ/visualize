@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vrew 작업 카드 — 2026-10-31-65세-의원진료비</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#2a2f3a;--text:#e9ecf1;--muted:#9aa3b2;--accent:#f5c518;--btn:#2d6cdf;--btn-text:#fff}
+.theme-light{--bg:#f6f7f9;--card:#fff;--line:#dde1e7;--text:#16191f;--muted:#5b6474;--accent:#b8860b;--btn:#1f5fd1;--btn-text:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:18px/1.6 -apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:22px;margin:8px 0} h2{font-size:20px;margin:28px 0 8px;border-bottom:2px solid var(--accent);padding-bottom:4px}
+h3{font-size:18px;margin:0} h4{margin:0 0 6px;color:var(--accent)}
+.card,.scene{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+pre{white-space:pre-wrap;word-break:break-word;margin:10px 0 0;font:inherit}
+.note{color:var(--muted);font-size:16px;margin:6px 0 0}
+.row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin:6px 0}
+.row>span:nth-child(2),.row>strong{flex:1 1 220px}
+.label{color:var(--muted);font-size:15px;min-width:72px}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px}
+.copy{background:var(--btn);color:var(--btn-text);padding:10px 18px;min-height:44px}
+.copy.small{padding:6px 14px;min-height:36px;font-size:16px}
+.copy.done{background:#2e9e5b}
+#theme{background:var(--card);color:var(--text);border:1px solid var(--line);padding:8px 12px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.check input{width:22px;height:22px;margin-top:3px;flex:none}
+.check span,pre,.row span{min-width:0;overflow-wrap:anywhere}
+.steps li{margin:4px 0}
+.figs{display:flex;gap:12px;flex-wrap:wrap} .figs figure{margin:0;flex:0 1 200px}
+.figs img{width:100%;border-radius:10px;display:block} .figs figcaption{color:var(--muted);font-size:15px;margin-top:4px}
+</style></head>
+<body><main>
+<header><h1>Vrew 작업 카드</h1><button id="theme" type="button">밝게/어둡게</button></header>
+<p class="note">2026-10-31-65세-의원진료비 · 사실 검증과 업로드 전 점검을 통과한 회차입니다. 위에서부터 차례로 복사해 붙여넣으세요.</p>
+<ol class="steps">
+<li>대본 붙여넣기 → AI 목소리(차분한 중년, 0.9~1.0배)</li>
+<li>장면마다 AI 이미지 문구 복사 → 이미지 바꾸기</li>
+<li>큰 글자가 있는 장면에 텍스트 추가</li>
+<li>배경음악(오디오 보관함·Vrew 음원) → 내보내기 mp4</li>
+<li>제목·설명란·고정댓글 복사해 업로드</li>
+</ol>
+<h2>0단계 · 첫 장면 강조 제목</h2>
+<section class="card"><img src="title-preview.png" alt="강조 제목 미리보기" style="width:100%;max-width:320px;border-radius:12px;display:block">
+<p class="note">Vrew 1번 장면 → 삽입 → 이미지 → 같은 폴더의 <strong>title-overlay.png</strong>(투명 배경) → 화면 전체 크기로 맨 위에 얹기.
+1번 장면의 '큰 글자'는 이 이미지가 대신하므로 따로 넣지 않습니다. 아래 배경은 AI 이미지 자리 표시입니다.</p></section>
+<h2>0-1단계 · 숫자 카드 (표 이미지)</h2>
+<section class="card"><div class="figs"><figure><img src="number-1.png" alt="숫자 카드 1"><figcaption>number-1.png · 장면 5~11</figcaption></figure></div>
+<p class="note">표시된 장면들을 하나로 이어 붙이거나 장면마다 → 이미지 바꾸기 → 같은 폴더의 <strong>number-N.png</strong>를 화면 전체 크기로 넣습니다.
+이 장면들에는 AI 이미지와 큰 글자를 넣지 않습니다. 자막은 화면 맨 아래에 두어 표를 가리지 않게 합니다.</p></section>
+<h2>1단계 · 대본</h2>
+<section class="card"><div class="card-head"><h3>1. 대본 붙여넣기</h3><button class="copy" data-copy="65세부터 의원비 1,500원일 때 있어요.
+총진료비 구간에 따라 내는 돈이 정해져요.
+총진료비가 1만 5천 원 이하면
+1,500원만 내요.
+1만 5천 원을 넘으면 구간별로 달라요.
+2만 원까지는 10%,
+2만 5천 원까지는 20%,
+그보다 많으면 30%예요.
+표를 보시면, 2만 원 진료는 2,000원.
+65세 미만은 보통 30%, 6,000원이죠.
+2만 5천 원을 넘으면 똑같이 30%예요.
+동네 의원 외래 진료 기준이고,
+병원급과 약국은 기준이 달라요.
+진료비 영수증으로 한번 확인해 보세요.
+개인 상황에 따라 다르니 전문가와 상담하세요.">복사</button></div><p class="note">Vrew → 새로 만들기 → 텍스트로 비디오 만들기 → 쇼츠 9:16 → 대본 칸에 붙여넣기</p><pre>65세부터 의원비 1,500원일 때 있어요.
+총진료비 구간에 따라 내는 돈이 정해져요.
+총진료비가 1만 5천 원 이하면
+1,500원만 내요.
+1만 5천 원을 넘으면 구간별로 달라요.
+2만 원까지는 10%,
+2만 5천 원까지는 20%,
+그보다 많으면 30%예요.
+표를 보시면, 2만 원 진료는 2,000원.
+65세 미만은 보통 30%, 6,000원이죠.
+2만 5천 원을 넘으면 똑같이 30%예요.
+동네 의원 외래 진료 기준이고,
+병원급과 약국은 기준이 달라요.
+진료비 영수증으로 한번 확인해 보세요.
+개인 상황에 따라 다르니 전문가와 상담하세요.</pre></section>
+<h2>2~3단계 · 장면별 이미지와 큰 글자</h2>
+<section class="scene"><h4>장면 1</h4><div class="row"><span class="label">나레이션</span><span>65세부터 의원비 1,500원일 때 있어요.</span></div><div class="row"><span class="label">AI 이미지</span><span>밝은 동네 의원 대기실 의자에 앉아 미소 짓는 60대 한국인 부부, 간판·글자 없음, 위쪽은 흐린 흰 벽, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="밝은 동네 의원 대기실 의자에 앉아 미소 짓는 60대 한국인 부부, 간판·글자 없음, 위쪽은 흐린 흰 벽, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>동네 의원 진료비
+1,500원 내는 구간</strong><button class="copy small" data-copy="동네 의원 진료비
+1,500원 내는 구간">복사</button></div></section><section class="scene"><h4>장면 2</h4><div class="row"><span class="label">나레이션</span><span>총진료비 구간에 따라 내는 돈이 정해져요.</span></div><div class="row"><span class="label">AI 이미지</span><span>탁자 위 계산기와 종이 한 장, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="탁자 위 계산기와 종이 한 장, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>총진료비 구간별</strong><button class="copy small" data-copy="총진료비 구간별">복사</button></div></section><section class="scene"><h4>장면 3</h4><div class="row"><span class="label">나레이션</span><span>총진료비가 1만 5천 원 이하면</span></div><div class="row"><span class="label">AI 이미지</span><span>진료실 앞 대기 의자에 앉아 차례를 기다리는 60대 한국인 남성, 간판 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="진료실 앞 대기 의자에 앉아 차례를 기다리는 60대 한국인 남성, 간판 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>1만 5천 원 이하</strong><button class="copy small" data-copy="1만 5천 원 이하">복사</button></div></section><section class="scene"><h4>장면 4</h4><div class="row"><span class="label">나레이션</span><span>1,500원만 내요.</span></div><div class="row"><span class="label">AI 이미지</span><span>의원 접수대에서 카드로 계산하는 60대 한국인 여성의 손, 화면 글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="의원 접수대에서 카드로 계산하는 60대 한국인 여성의 손, 화면 글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>1,500원</strong><button class="copy small" data-copy="1,500원">복사</button></div></section><section class="scene"><h4>장면 5</h4><div class="row"><span class="label">나레이션</span><span>1만 5천 원을 넘으면 구간별로 달라요.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 6</h4><div class="row"><span class="label">나레이션</span><span>2만 원까지는 10%,</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 7</h4><div class="row"><span class="label">나레이션</span><span>2만 5천 원까지는 20%,</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 8</h4><div class="row"><span class="label">나레이션</span><span>그보다 많으면 30%예요.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 9</h4><div class="row"><span class="label">나레이션</span><span>표를 보시면, 2만 원 진료는 2,000원.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 10</h4><div class="row"><span class="label">나레이션</span><span>65세 미만은 보통 30%, 6,000원이죠.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 11</h4><div class="row"><span class="label">나레이션</span><span>2만 5천 원을 넘으면 똑같이 30%예요.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 12</h4><div class="row"><span class="label">나레이션</span><span>동네 의원 외래 진료 기준이고,</span></div><div class="row"><span class="label">AI 이미지</span><span>주택가 골목의 작은 2층 건물 입구로 걸어가는 60대 한국인 여성, 간판·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="주택가 골목의 작은 2층 건물 입구로 걸어가는 60대 한국인 여성, 간판·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>동네 의원 외래</strong><button class="copy small" data-copy="동네 의원 외래">복사</button></div></section><section class="scene"><h4>장면 13</h4><div class="row"><span class="label">나레이션</span><span>병원급과 약국은 기준이 달라요.</span></div><div class="row"><span class="label">AI 이미지</span><span>넓은 종합병원 로비와 약 진열장이 있는 약국 카운터를 나란히 보여 주는 장면, 로고·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="넓은 종합병원 로비와 약 진열장이 있는 약국 카운터를 나란히 보여 주는 장면, 로고·글자 없음, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>병원급·약국은 달라요</strong><button class="copy small" data-copy="병원급·약국은 달라요">복사</button></div></section><section class="scene"><h4>장면 14</h4><div class="row"><span class="label">나레이션</span><span>진료비 영수증으로 한번 확인해 보세요.</span></div><div class="row"><span class="label">AI 이미지</span><span>거실 탁자에서 종이 영수증을 함께 들여다보는 60대 한국인 부부, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="거실 탁자에서 종이 영수증을 함께 들여다보는 60대 한국인 부부, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div></section><section class="scene"><h4>장면 15</h4><div class="row"><span class="label">나레이션</span><span>개인 상황에 따라 다르니 전문가와 상담하세요.</span></div><div class="row"><span class="label">AI 이미지</span><span>상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div></section>
+<h2>5단계 · 업로드 정보</h2>
+<section class="card"><div class="card-head"><h3>제목</h3><button class="copy" data-copy="65세 이상 동네 의원비, 1만 5천 원 이하면 1,500원">복사</button></div><pre>65세 이상 동네 의원비, 1만 5천 원 이하면 1,500원</pre></section>
+<section class="card"><div class="card-head"><h3>설명란</h3><button class="copy" data-copy="65세 이상이 동네 의원(의원급)에서 외래 진료를 받으면, 총진료비 구간에 따라 내는 돈이 정해져요.
+총진료비 1만 5천 원 이하면 1,500원, 2만 원 이하면 10%, 2만 5천 원 이하면 20%, 그보다 많으면 30%를 내요.
+예를 들어 총진료비 2만 원이면 65세 이상은 2,000원이고, 65세 미만은 보통 30%라 6,000원이에요. (계산 예시)
+
+[용어 풀이]
+- 총진료비: 건강보험이 적용되는 진료비 전체(요양급여비용 총액)예요. 내가 내는 돈과 건강보험이 내는 돈을 합친 금액이고, 비급여 항목은 따로 붙어요.
+- 영상 속 금액(2,000원 등)은 공식 구간 규칙으로 계산한 예시예요. 실제 영수증은 진료 내용에 따라 달라요.
+
+[이런 경우는 기준이 달라요]
+- 병원·종합병원·상급종합병원 외래와 약국은 기준이 따로 있어요. (약국은 65세 이상 1만 원 이하 1,000원 등 별도 구간)
+- 한의원에서 투약처방을 받으면 구간이 조금 달라요. (1만 5천 원 이하 1,500원, 2만 5천 원 이하 10%, 3만 원 이하 20%, 넘으면 30%)
+- 건강보험 기준이에요. 의료급여 수급자는 본인부담 체계가 따로 있어요.
+
+[출처]
+- 보건복지부 보험급여체계(외래 본인부담) 안내: https://www.mohw.go.kr/menu.es?mid=a10705020200
+- 보건복지부 보도자료 &#x27;노인외래정액제 개선안&#x27; (2017-11-01, 정책브리핑): https://www.korea.kr/briefing/pressReleaseView.do?newsId=156234597
+- 정책브리핑 국민이 말하는 정책 (2018-12-20): https://www.korea.kr/news/reporterView.do?newsId=148856595
+
+[꼭 직접 확인해 주세요]
+이 영상은 보건복지부 안내와 정책브리핑 보도자료를 바탕으로 만들었고, 법령(국민건강보험법 시행령·시행규칙) 원문을 직접 대조하지는 못했어요. 기준 금액은 제도 개정으로 바뀔 수 있으니 위 보건복지부 안내나 국민건강보험공단(1577-1000)에서 확인해 주세요.
+
+[음원]
+[Vrew 작업 후 vrew.md 음원 기록란에서 채우기]
+
+[안내]
+이 영상은 공공기관 자료를 바탕으로 한 일반 정보이며, 특정 병원을 추천하지 않고 의료·법률 상담을 대신하지 않습니다.
+실제 본인부담은 진료 내용과 개인 상황에 따라 다르니 국민건강보험공단에서 확인하시고 전문가와 상담하세요.
+안내 내용은 2026년 10월 31일 열람 기준이에요.
+
+#쇼츠 #노인외래정액제 #의원진료비 #65세이상 #5060">복사</button></div><p class="note">[음원] 칸은 고른 배경음악으로 채운 뒤 올리세요.</p><pre>65세 이상이 동네 의원(의원급)에서 외래 진료를 받으면, 총진료비 구간에 따라 내는 돈이 정해져요.
+총진료비 1만 5천 원 이하면 1,500원, 2만 원 이하면 10%, 2만 5천 원 이하면 20%, 그보다 많으면 30%를 내요.
+예를 들어 총진료비 2만 원이면 65세 이상은 2,000원이고, 65세 미만은 보통 30%라 6,000원이에요. (계산 예시)
+
+[용어 풀이]
+- 총진료비: 건강보험이 적용되는 진료비 전체(요양급여비용 총액)예요. 내가 내는 돈과 건강보험이 내는 돈을 합친 금액이고, 비급여 항목은 따로 붙어요.
+- 영상 속 금액(2,000원 등)은 공식 구간 규칙으로 계산한 예시예요. 실제 영수증은 진료 내용에 따라 달라요.
+
+[이런 경우는 기준이 달라요]
+- 병원·종합병원·상급종합병원 외래와 약국은 기준이 따로 있어요. (약국은 65세 이상 1만 원 이하 1,000원 등 별도 구간)
+- 한의원에서 투약처방을 받으면 구간이 조금 달라요. (1만 5천 원 이하 1,500원, 2만 5천 원 이하 10%, 3만 원 이하 20%, 넘으면 30%)
+- 건강보험 기준이에요. 의료급여 수급자는 본인부담 체계가 따로 있어요.
+
+[출처]
+- 보건복지부 보험급여체계(외래 본인부담) 안내: https://www.mohw.go.kr/menu.es?mid=a10705020200
+- 보건복지부 보도자료 &#x27;노인외래정액제 개선안&#x27; (2017-11-01, 정책브리핑): https://www.korea.kr/briefing/pressReleaseView.do?newsId=156234597
+- 정책브리핑 국민이 말하는 정책 (2018-12-20): https://www.korea.kr/news/reporterView.do?newsId=148856595
+
+[꼭 직접 확인해 주세요]
+이 영상은 보건복지부 안내와 정책브리핑 보도자료를 바탕으로 만들었고, 법령(국민건강보험법 시행령·시행규칙) 원문을 직접 대조하지는 못했어요. 기준 금액은 제도 개정으로 바뀔 수 있으니 위 보건복지부 안내나 국민건강보험공단(1577-1000)에서 확인해 주세요.
+
+[음원]
+[Vrew 작업 후 vrew.md 음원 기록란에서 채우기]
+
+[안내]
+이 영상은 공공기관 자료를 바탕으로 한 일반 정보이며, 특정 병원을 추천하지 않고 의료·법률 상담을 대신하지 않습니다.
+실제 본인부담은 진료 내용과 개인 상황에 따라 다르니 국민건강보험공단에서 확인하시고 전문가와 상담하세요.
+안내 내용은 2026년 10월 31일 열람 기준이에요.
+
+#쇼츠 #노인외래정액제 #의원진료비 #65세이상 #5060</pre></section>
+<section class="card"><div class="card-head"><h3>고정댓글</h3><button class="copy" data-copy="동네 의원에서 진료비 영수증을 받아 보시면 총진료비와 내신 돈이 어떻게 나와 있던가요? 부모님 진료비를 챙기시는 분들의 경험도 댓글로 나눠 주세요.">복사</button></div><pre>동네 의원에서 진료비 영수증을 받아 보시면 총진료비와 내신 돈이 어떻게 나와 있던가요? 부모님 진료비를 챙기시는 분들의 경험도 댓글로 나눠 주세요.</pre></section>
+<p class="note">업로드 추천 시간: 오전 7시</p>
+<h2>업로드 전 직접 확인</h2>
+<section class="card"><label class="check"><input type="checkbox" data-key="0"><span>https://www.mohw.go.kr/menu.es?mid=a10705020200 을 열어 &#x27;의원 / 65세 이상 노인&#x27; 칸이 1만 5천 원 이하 1,500원 · 2만 원 이하 10% · 2만 5천 원 이하 20% · 초과 30% 그대로인지 확인 (바뀌었으면 올리지 말고 원고·숫자 카드부터 다시 검증)</span></label><label class="check"><input type="checkbox" data-key="1"><span>같은 페이지에서 설명란의 한의원 투약처방·약국 구간 문장이 그대로인지 확인 (안 맞으면 그 줄 삭제)</span></label><label class="check"><input type="checkbox" data-key="2"><span>숫자 카드(number-1.png) 장면 5~11에서 자막이 표를 가리지 않는지 휴대폰으로 확인</span></label><label class="check"><input type="checkbox" data-key="3"><span>설명란 음원 칸을 vrew.md 음원 기록란에서 채우기</span></label><label class="check"><input type="checkbox" data-key="4"><span>설명란 링크가 클릭되는지 YouTube Studio 미리보기로 확인</span></label><label class="check"><input type="checkbox" data-key="5"><span>AI 목소리가 숫자·영문(연도, 전화번호, 앱 이름)을 제대로 읽는지 들어 보기</span></label><label class="check"><input type="checkbox" data-key="6"><span>휴대폰으로 끝까지 재생: 자막이 얼굴·쇼츠 버튼을 가리지 않는지, 길이 30~60초인지</span></label><label class="check"><input type="checkbox" data-key="7"><span>배경음악 곡명·라이선스를 설명란 [음원] 칸에 채우기</span></label><label class="check"><input type="checkbox" data-key="8"><span>업로드 후 YouTube Studio에서 &#x27;저작권 주장&#x27; 없는지 확인</span></label><label class="check"><input type="checkbox" data-key="9"><span>숫자 카드 장면: 표가 끝까지 보이고, 자막이 표를 가리지 않는지 (자막은 화면 맨 아래로)</span></label></section>
+</main>
+<script>
+var root = document.documentElement;
+var stored = null;
+try { stored = localStorage.getItem("vrew-pack-theme"); } catch (e) {}
+var light = stored ? stored === "light" : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+if (light) root.classList.add("theme-light");
+document.getElementById("theme").addEventListener("click", function () {
+  var on = root.classList.toggle("theme-light");
+  try { localStorage.setItem("vrew-pack-theme", on ? "light" : "dark"); } catch (e) {}
+});
+function fallbackCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+}
+document.querySelectorAll(".copy").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var text = btn.getAttribute("data-copy");
+    var done = function () {
+      var old = btn.textContent; btn.textContent = "복사됨"; btn.classList.add("done");
+      setTimeout(function () { btn.textContent = old; btn.classList.remove("done"); }, 1500);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+var KEY = "vrew-pack-checks:" + document.title;
+var saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+document.querySelectorAll(".check input").forEach(function (box) {
+  box.checked = !!saved[box.dataset.key];
+  box.addEventListener("change", function () {
+    saved[box.dataset.key] = box.checked;
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+  });
+});
+</script>
+</body></html>
