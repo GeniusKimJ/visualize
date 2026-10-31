@@ -702,12 +702,9 @@ class Bot:
         n = len(self.picked_courts) or int(self.cfg.get("court_count", 1))
         cnt, reds = form_values(self.cfg, n)
         try:
-            self.page.locator(S.PEOPLE_INPUT).first.fill(str(cnt))
-            for name, v in reds.items():
-                self.page.locator(f'input[name="{name}"]').first.fill(str(v))
-            if S.AFTER_FILL_JS:
-                self.page.evaluate(S.AFTER_FILL_JS)
-            log.info("사용인원 %d명, 감면 %s", cnt, reds or "없음")
+            # 감면 입력칸은 숨은 레이어 안에 있어 클릭/입력이 안 되므로 스크립트로 값 설정 + 요금 재계산
+            r = self.page.evaluate(S.TURBO_SUBMIT_JS, [cnt, False, [], reds])
+            log.info("사용인원 %d명, 감면 %s (%s)", cnt, reds or "없음", r)
         except Exception as e:  # noqa: BLE001
             log.warning("인원 입력 실패: %s", e)
 
@@ -724,11 +721,8 @@ class Bot:
         want = max(1, min(int(self.cfg.get("court_count", 1)), S.COURT_MAX))
         pick = choose_courts(free, want, self.cfg.get("courts", []), self.cfg.get("court_fallback_any", True))
         log.info("빈 코트 %s / 지정 %s → 선택 %s", free, self.cfg.get("courts", []) or "자동(연번)", pick)
-        for c in info:
-            if c["checked"] and c["no"] not in pick:
-                self.page.locator(f'{S.COURT_CHECKBOX}[value="{c["no"]}"]').uncheck()
-        for n in pick:
-            self.page.locator(f'{S.COURT_CHECKBOX}[value="{n}"]').check()
+        # 사이트는 체크박스 원본을 CSS로 숨기므로 클릭 대신 스크립트로 체크 (change 이벤트로 사이트 검사 실행)
+        self.page.evaluate(S.SET_COURTS_JS, pick)
         return pick
 
     def check_agreements(self):
@@ -1129,24 +1123,33 @@ def wait_until_open(bot, clock, cfg, open_dt, first):
 
 
 def run_watch(bot, targets, cfg, already_booked=0):
-    log.info("빈자리 감시 시작 (최소 30초 + 랜덤 0~15초 간격)")
-    pending, booked = list(targets), already_booked
+    """빈자리 감시: 달력 HTML만 받아 확인하다가 원하는 시간이 비면 바로 예약 (터보)."""
+    log.info("빈자리 감시 시작 (최소 30초 + 랜덤 0~15초 간격): %s",
+             ", ".join(f"{t.label()} {'/'.join(t.times)}" for t in targets))
+    pending, booked, n = list(targets), already_booked, 0
     while pending and booked < cfg["max_per_week"]:
         today = datetime.now(KST).date()
-        pending = [t for t in pending if t.day >= today]
+        pending = [t for t in pending if t.day > today]
         for tg in list(pending):
-            if not bot.is_logged_in() and not bot.check_login():
+            st, ms = bot.fetch_calendar(tg.day)
+            if st and st["logged_out"]:
                 bot.ensure_login()
-            bot.open_date(tg.day)
-            bot.handle_blockers()
-            if bot.find_slot(tg.day, tg.times, tg.facilities):
-                bot.n.alert(f"빈자리 발견: {tg.label()}")
-                status, detail = bot.try_book(tg)
+                st, ms = bot.fetch_calendar(tg.day)
+            pick = pick_slot(st["slots"], tg.times) if st else None
+            if pick:
+                bot.n.alert(f"빈자리 발견: {tg.label()} {pick[0]}")
+                bot.goto_calendar(tg.day)                 # 시간 선택 함수가 있는 달력 화면
+                status, detail = bot.try_book(tg, pick)
                 log.info("감시 결과 %s: %s %s", tg.label(), status, detail)
                 if status == "성공":
                     booked += 1
                     pending.remove(tg)
             nap(random.uniform(1, 3))
+        n += 1
+        if not pending or booked >= cfg["max_per_week"]:
+            break
+        if n % 10 == 1:
+            log.info("감시 중… (%d회째, 남은 대상 %d개)", n, len(pending))
         nap(30 + random.uniform(0, 15))
     bot.n.info("빈자리 감시 종료")
 

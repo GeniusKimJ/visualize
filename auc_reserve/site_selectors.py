@@ -103,6 +103,14 @@ _LAYER_YES = """
 """
 # ① 달력: 사이트의 시간 선택 함수 실행 → '등록하시겠습니까?' [예]
 TURBO_SELECT_JS = "async ([call, expect]) => { (0, eval)(call);" + _LAYER_YES + "}"
+# 코트 체크만 (일반 방식용): 고른 코트만 체크, change 이벤트로 사이트 검사 실행
+SET_COURTS_JS = """(nos) => {
+  document.querySelectorAll('input[type=checkbox][name=facilityNo]').forEach(b => {
+    const want = nos.includes(parseInt(b.value));
+    if (b.checked !== want) { b.checked = want; b.dispatchEvent(new Event('change', {bubbles: true})); }
+  });
+  return [...document.querySelectorAll('input[type=checkbox][name=facilityNo]:checked')].map(b => b.value).join(',');
+}"""
 # ② 코트 선택: 고른 코트만 체크(change 이벤트로 사이트 검사 실행) → [다음]
 TURBO_COURT_JS = """([nos, nextText]) => {
   document.querySelectorAll('input[type=checkbox][name=facilityNo]').forEach(b => {
