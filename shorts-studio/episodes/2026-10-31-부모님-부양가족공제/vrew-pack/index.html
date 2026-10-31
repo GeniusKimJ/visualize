@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vrew 작업 카드 — 2026-10-31-부모님-부양가족공제</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#2a2f3a;--text:#e9ecf1;--muted:#9aa3b2;--accent:#f5c518;--btn:#2d6cdf;--btn-text:#fff}
+.theme-light{--bg:#f6f7f9;--card:#fff;--line:#dde1e7;--text:#16191f;--muted:#5b6474;--accent:#b8860b;--btn:#1f5fd1;--btn-text:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:18px/1.6 -apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:22px;margin:8px 0} h2{font-size:20px;margin:28px 0 8px;border-bottom:2px solid var(--accent);padding-bottom:4px}
+h3{font-size:18px;margin:0} h4{margin:0 0 6px;color:var(--accent)}
+.card,.scene{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+pre{white-space:pre-wrap;word-break:break-word;margin:10px 0 0;font:inherit}
+.note{color:var(--muted);font-size:16px;margin:6px 0 0}
+.row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin:6px 0}
+.row>span:nth-child(2),.row>strong{flex:1 1 220px}
+.label{color:var(--muted);font-size:15px;min-width:72px}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px}
+.copy{background:var(--btn);color:var(--btn-text);padding:10px 18px;min-height:44px}
+.copy.small{padding:6px 14px;min-height:36px;font-size:16px}
+.copy.done{background:#2e9e5b}
+#theme{background:var(--card);color:var(--text);border:1px solid var(--line);padding:8px 12px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.check input{width:22px;height:22px;margin-top:3px;flex:none}
+.check span,pre,.row span{min-width:0;overflow-wrap:anywhere}
+.steps li{margin:4px 0}
+.figs{display:flex;gap:12px;flex-wrap:wrap} .figs figure{margin:0;flex:0 1 200px}
+.figs img{width:100%;border-radius:10px;display:block} .figs figcaption{color:var(--muted);font-size:15px;margin-top:4px}
+</style></head>
+<body><main>
+<header><h1>Vrew 작업 카드</h1><button id="theme" type="button">밝게/어둡게</button></header>
+<p class="note">2026-10-31-부모님-부양가족공제 · 사실 검증과 업로드 전 점검을 통과한 회차입니다. 위에서부터 차례로 복사해 붙여넣으세요.</p>
+<ol class="steps">
+<li>대본 붙여넣기 → AI 목소리(차분한 중년, 0.9~1.0배)</li>
+<li>장면마다 AI 이미지 문구 복사 → 이미지 바꾸기</li>
+<li>큰 글자가 있는 장면에 텍스트 추가</li>
+<li>배경음악(오디오 보관함·Vrew 음원) → 내보내기 mp4</li>
+<li>제목·설명란·고정댓글 복사해 업로드</li>
+</ol>
+<h2>0단계 · 첫 장면 강조 제목</h2>
+<section class="card"><img src="title-preview.png" alt="강조 제목 미리보기" style="width:100%;max-width:320px;border-radius:12px;display:block">
+<p class="note">Vrew 1번 장면 → 삽입 → 이미지 → 같은 폴더의 <strong>title-overlay.png</strong>(투명 배경) → 화면 전체 크기로 맨 위에 얹기.
+1번 장면의 '큰 글자'는 이 이미지가 대신하므로 따로 넣지 않습니다. 아래 배경은 AI 이미지 자리 표시입니다.</p></section>
+<h2>0-1단계 · 숫자 카드 (표 이미지)</h2>
+<section class="card"><div class="figs"><figure><img src="number-1.png" alt="숫자 카드 1"><figcaption>number-1.png · 장면 6~9</figcaption></figure></div>
+<p class="note">표시된 장면들을 하나로 이어 붙이거나 장면마다 → 이미지 바꾸기 → 같은 폴더의 <strong>number-N.png</strong>를 화면 전체 크기로 넣습니다.
+이 장면들에는 AI 이미지와 큰 글자를 넣지 않습니다. 자막은 화면 맨 아래에 두어 표를 가리지 않게 합니다.</p></section>
+<h2>1단계 · 대본</h2>
+<section class="card"><div class="card-head"><h3>1. 대본 붙여넣기</h3><button class="copy" data-copy="부모님을 부양하면 세금이 줄 수 있어요.
+연말정산 부양가족 공제예요.
+부모님이 만 60세 이상이고
+소득이 기준 이하면 한 분당
+150만 원을 소득에서 빼 줘요.
+만 70세 이상이면 100만 원이 더해져
+한 분당 250만 원이 돼요.
+표처럼 세율 15%로 계산하면 세금이
+22만 5천 원, 37만 5천 원 줄어요.
+나이는 그해 마지막 날 기준이에요.
+따로 사셔도 실제로 부양하면 돼요.
+다만 형제자매 중 한 명만 받을 수 있어요.
+기준을 넘으면 70세 추가 공제도 안 돼요.
+소득 기준은 국세청 안내로 꼭 확인하세요.
+개인 상황에 따라 다르니 전문가와 상담하세요.">복사</button></div><p class="note">Vrew → 새로 만들기 → 텍스트로 비디오 만들기 → 쇼츠 9:16 → 대본 칸에 붙여넣기</p><pre>부모님을 부양하면 세금이 줄 수 있어요.
+연말정산 부양가족 공제예요.
+부모님이 만 60세 이상이고
+소득이 기준 이하면 한 분당
+150만 원을 소득에서 빼 줘요.
+만 70세 이상이면 100만 원이 더해져
+한 분당 250만 원이 돼요.
+표처럼 세율 15%로 계산하면 세금이
+22만 5천 원, 37만 5천 원 줄어요.
+나이는 그해 마지막 날 기준이에요.
+따로 사셔도 실제로 부양하면 돼요.
+다만 형제자매 중 한 명만 받을 수 있어요.
+기준을 넘으면 70세 추가 공제도 안 돼요.
+소득 기준은 국세청 안내로 꼭 확인하세요.
+개인 상황에 따라 다르니 전문가와 상담하세요.</pre></section>
+<h2>2~3단계 · 장면별 이미지와 큰 글자</h2>
+<section class="scene"><h4>장면 1</h4><div class="row"><span class="label">나레이션</span><span>부모님을 부양하면 세금이 줄 수 있어요.</span></div><div class="row"><span class="label">AI 이미지</span><span>거실 소파에서 80대 어머니와 나란히 앉아 웃는 50대 후반 한국인 남성, 위쪽은 밝은 벽과 창문 빛, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="거실 소파에서 80대 어머니와 나란히 앉아 웃는 50대 후반 한국인 남성, 위쪽은 밝은 벽과 창문 빛, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>부모님 부양하면
+150만 원 소득공제</strong><button class="copy small" data-copy="부모님 부양하면
+150만 원 소득공제">복사</button></div></section><section class="scene"><h4>장면 2</h4><div class="row"><span class="label">나레이션</span><span>연말정산 부양가족 공제예요.</span></div><div class="row"><span class="label">AI 이미지</span><span>탁자 위에 놓인 서류 봉투와 계산기, 펜, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="탁자 위에 놓인 서류 봉투와 계산기, 펜, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>부양가족 공제</strong><button class="copy small" data-copy="부양가족 공제">복사</button></div></section><section class="scene"><h4>장면 3</h4><div class="row"><span class="label">나레이션</span><span>부모님이 만 60세 이상이고</span></div><div class="row"><span class="label">AI 이미지</span><span>공원 산책로를 천천히 함께 걷는 70대 한국인 노부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="공원 산책로를 천천히 함께 걷는 70대 한국인 노부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>만 60세 이상</strong><button class="copy small" data-copy="만 60세 이상">복사</button></div></section><section class="scene"><h4>장면 4</h4><div class="row"><span class="label">나레이션</span><span>소득이 기준 이하면 한 분당</span></div><div class="row"><span class="label">AI 이미지</span><span>탁자 위 가계부와 돋보기안경, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="탁자 위 가계부와 돋보기안경, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>소득 기준 이하</strong><button class="copy small" data-copy="소득 기준 이하">복사</button></div></section><section class="scene"><h4>장면 5</h4><div class="row"><span class="label">나레이션</span><span>150만 원을 소득에서 빼 줘요.</span></div><div class="row"><span class="label">AI 이미지</span><span>계산기를 두드리며 메모하는 60대 한국인 여성의 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="계산기를 두드리며 메모하는 60대 한국인 여성의 손, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>한 분당 150만 원</strong><button class="copy small" data-copy="한 분당 150만 원">복사</button></div></section><section class="scene"><h4>장면 6</h4><div class="row"><span class="label">나레이션</span><span>만 70세 이상이면 100만 원이 더해져</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 7</h4><div class="row"><span class="label">나레이션</span><span>한 분당 250만 원이 돼요.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 8</h4><div class="row"><span class="label">나레이션</span><span>표처럼 세율 15%로 계산하면 세금이</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 9</h4><div class="row"><span class="label">나레이션</span><span>22만 5천 원, 37만 5천 원 줄어요.</span></div><div class="row"><span class="label">숫자 카드</span><strong>number-1.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div></section><section class="scene"><h4>장면 10</h4><div class="row"><span class="label">나레이션</span><span>나이는 그해 마지막 날 기준이에요.</span></div><div class="row"><span class="label">AI 이미지</span><span>벽에 걸린 달력의 마지막 장, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="벽에 걸린 달력의 마지막 장, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>그해 마지막 날 기준</strong><button class="copy small" data-copy="그해 마지막 날 기준">복사</button></div></section><section class="scene"><h4>장면 11</h4><div class="row"><span class="label">나레이션</span><span>따로 사셔도 실제로 부양하면 돼요.</span></div><div class="row"><span class="label">AI 이미지</span><span>집에서 휴대폰으로 부모님께 전화하며 웃는 50대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="집에서 휴대폰으로 부모님께 전화하며 웃는 50대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>따로 살아도 가능</strong><button class="copy small" data-copy="따로 살아도 가능">복사</button></div></section><section class="scene"><h4>장면 12</h4><div class="row"><span class="label">나레이션</span><span>다만 형제자매 중 한 명만 받을 수 있어요.</span></div><div class="row"><span class="label">AI 이미지</span><span>식탁에 둘러앉아 식사하는 50~60대 한국인 형제자매와 80대 부모, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="식탁에 둘러앉아 식사하는 50~60대 한국인 형제자매와 80대 부모, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>형제자매 중 한 명만</strong><button class="copy small" data-copy="형제자매 중 한 명만">복사</button></div></section><section class="scene"><h4>장면 13</h4><div class="row"><span class="label">나레이션</span><span>기준을 넘으면 70세 추가 공제도 안 돼요.</span></div><div class="row"><span class="label">AI 이미지</span><span>탁자 위 서류를 꼼꼼히 확인하는 60대 한국인 남성, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="탁자 위 서류를 꼼꼼히 확인하는 60대 한국인 남성, 글자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>추가 공제도 불가</strong><button class="copy small" data-copy="추가 공제도 불가">복사</button></div></section><section class="scene"><h4>장면 14</h4><div class="row"><span class="label">나레이션</span><span>소득 기준은 국세청 안내로 꼭 확인하세요.</span></div><div class="row"><span class="label">AI 이미지</span><span>노트북으로 안내문을 읽는 50대 한국인 부부, 화면은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="노트북으로 안내문을 읽는 50대 한국인 부부, 화면은 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div><div class="row"><span class="label">큰 글자</span><strong>국세청 안내 확인</strong><button class="copy small" data-copy="국세청 안내 확인">복사</button></div></section><section class="scene"><h4>장면 15</h4><div class="row"><span class="label">나레이션</span><span>개인 상황에 따라 다르니 전문가와 상담하세요.</span></div><div class="row"><span class="label">AI 이미지</span><span>상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음</span><button class="copy small" data-copy="상담 창구에서 상담원과 이야기하는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음">복사</button></div></section>
+<h2>5단계 · 업로드 정보</h2>
+<section class="card"><div class="card-head"><h3>제목</h3><button class="copy" data-copy="부모님 부양하면 한 분당 150만 원 소득공제 받는 조건">복사</button></div><pre>부모님 부양하면 한 분당 150만 원 소득공제 받는 조건</pre></section>
+<section class="card"><div class="card-head"><h3>설명란</h3><button class="copy" data-copy="만 60세 이상 부모님(장인·장모·시부모 포함)을 실제로 부양하면 연말정산이나 종합소득세 신고 때 한 분당 150만 원을 소득에서 빼 줘요(인적공제 중 &#x27;기본공제&#x27;). 만 70세 이상이면 경로우대 추가공제 100만 원이 더해져 한 분당 250만 원이에요. 나이는 그해 마지막 날까지 그 나이가 되면 돼요.
+따로 사셔도 생활비를 드리는 등 실제로 부양하면 공제받을 수 있지만, 같은 부모님은 형제자매 중 한 명만 공제받을 수 있어요.
+영상의 표는 공제 금액에 세율(15%·24%)을 곱한 단순 계산 예시예요. 지방소득세는 빼고 계산했고, 실제로 줄어드는 세금은 소득과 다른 공제에 따라 달라요.
+
+[소득 기준, 꼭 확인하세요]
+- 현행 기준(국세청 안내): 부모님의 연간 소득금액 합계 100만 원 이하, 근로소득만 있으면 총급여 500만 원 이하.
+- 기준을 넘으면 기본공제와 경로우대 추가공제를 모두 받을 수 없어요.
+- 정부의 세제개편안(정책브리핑 2026.08.13 보도)에는 이 기준을 소득금액 300만 원 이하, 총급여 750만 원 이하로 높이는 안이 담겼어요. 국회 심의에 따라 내용과 시행 시기가 달라질 수 있으니, 신고 전에 국세청 연말정산 종합안내 또는 국세상담센터(국번 없이 126)에서 확인하세요.
+
+[출처]
+- 국세청 &#x27;자주 묻는 연말정산 ⑨인적공제 1화&#x27; (2024.12.04): https://www.korea.kr/news/policyNewsView.do?newsId=148937039
+- 국세청 &#x27;자주 묻는 연말정산 ④ 65세 경로우대자 추가 공제?&#x27; (2024.11.18): https://www.korea.kr/news/policyNewsView.do?newsId=148936323
+- 국세청 &#x27;연말정산 과다공제 사례 ①&#x27; (2024.12.19): https://www.korea.kr/multi/visualNewsView.do?newsId=148937690
+- 국세청 &#x27;소득 100만 원 넘는 부양가족 공제, 안돼요?…연말정산 오답 공개&#x27; (2026.01.23): https://www.korea.kr/news/policyNewsView.do?newsId=148958494
+- 법제처 &#x27;식대 비과세 월 20만 원·신용카드 소득공제 한도 상향&#x27; (세율 구간, 2023.12.11): https://www.korea.kr/news/policyNewsView.do?newsId=148923639
+- 정책브리핑 &#x27;세제개편안 살펴보니&#x27; (부양가족 소득 기준 상향 정부안, 2026.08.13): https://www.korea.kr/news/policyNewsView.do?newsId=148969870
+- 법적 근거: 소득세법 제50조(기본공제), 제51조(추가공제), 제55조(세율) (국가법령정보센터 law.go.kr)
+
+[음원]
+[Vrew 작업 후 vrew.md 음원 기록란에서 채우기]
+
+[안내]
+이 영상은 공공기관 자료를 바탕으로 한 일반 정보이며, 세무 상담을 대신하지 않습니다.
+공제 가능 여부와 줄어드는 세금은 소득, 다른 공제, 가족 상황에 따라 다르니 국세청(☎126)이나 세무 전문가와 상담하세요.
+안내 내용은 2026년 10월 31일 열람 기준이에요.
+
+#쇼츠 #연말정산 #부양가족공제 #부모님 #절세">복사</button></div><p class="note">[음원] 칸은 고른 배경음악으로 채운 뒤 올리세요.</p><pre>만 60세 이상 부모님(장인·장모·시부모 포함)을 실제로 부양하면 연말정산이나 종합소득세 신고 때 한 분당 150만 원을 소득에서 빼 줘요(인적공제 중 &#x27;기본공제&#x27;). 만 70세 이상이면 경로우대 추가공제 100만 원이 더해져 한 분당 250만 원이에요. 나이는 그해 마지막 날까지 그 나이가 되면 돼요.
+따로 사셔도 생활비를 드리는 등 실제로 부양하면 공제받을 수 있지만, 같은 부모님은 형제자매 중 한 명만 공제받을 수 있어요.
+영상의 표는 공제 금액에 세율(15%·24%)을 곱한 단순 계산 예시예요. 지방소득세는 빼고 계산했고, 실제로 줄어드는 세금은 소득과 다른 공제에 따라 달라요.
+
+[소득 기준, 꼭 확인하세요]
+- 현행 기준(국세청 안내): 부모님의 연간 소득금액 합계 100만 원 이하, 근로소득만 있으면 총급여 500만 원 이하.
+- 기준을 넘으면 기본공제와 경로우대 추가공제를 모두 받을 수 없어요.
+- 정부의 세제개편안(정책브리핑 2026.08.13 보도)에는 이 기준을 소득금액 300만 원 이하, 총급여 750만 원 이하로 높이는 안이 담겼어요. 국회 심의에 따라 내용과 시행 시기가 달라질 수 있으니, 신고 전에 국세청 연말정산 종합안내 또는 국세상담센터(국번 없이 126)에서 확인하세요.
+
+[출처]
+- 국세청 &#x27;자주 묻는 연말정산 ⑨인적공제 1화&#x27; (2024.12.04): https://www.korea.kr/news/policyNewsView.do?newsId=148937039
+- 국세청 &#x27;자주 묻는 연말정산 ④ 65세 경로우대자 추가 공제?&#x27; (2024.11.18): https://www.korea.kr/news/policyNewsView.do?newsId=148936323
+- 국세청 &#x27;연말정산 과다공제 사례 ①&#x27; (2024.12.19): https://www.korea.kr/multi/visualNewsView.do?newsId=148937690
+- 국세청 &#x27;소득 100만 원 넘는 부양가족 공제, 안돼요?…연말정산 오답 공개&#x27; (2026.01.23): https://www.korea.kr/news/policyNewsView.do?newsId=148958494
+- 법제처 &#x27;식대 비과세 월 20만 원·신용카드 소득공제 한도 상향&#x27; (세율 구간, 2023.12.11): https://www.korea.kr/news/policyNewsView.do?newsId=148923639
+- 정책브리핑 &#x27;세제개편안 살펴보니&#x27; (부양가족 소득 기준 상향 정부안, 2026.08.13): https://www.korea.kr/news/policyNewsView.do?newsId=148969870
+- 법적 근거: 소득세법 제50조(기본공제), 제51조(추가공제), 제55조(세율) (국가법령정보센터 law.go.kr)
+
+[음원]
+[Vrew 작업 후 vrew.md 음원 기록란에서 채우기]
+
+[안내]
+이 영상은 공공기관 자료를 바탕으로 한 일반 정보이며, 세무 상담을 대신하지 않습니다.
+공제 가능 여부와 줄어드는 세금은 소득, 다른 공제, 가족 상황에 따라 다르니 국세청(☎126)이나 세무 전문가와 상담하세요.
+안내 내용은 2026년 10월 31일 열람 기준이에요.
+
+#쇼츠 #연말정산 #부양가족공제 #부모님 #절세</pre></section>
+<section class="card"><div class="card-head"><h3>고정댓글</h3><button class="copy" data-copy="부모님을 부양가족으로 올려 공제받아 보셨나요? 형제자매끼리 누가 받을지 어떻게 정하셨는지 댓글로 나눠 주세요.">복사</button></div><pre>부모님을 부양가족으로 올려 공제받아 보셨나요? 형제자매끼리 누가 받을지 어떻게 정하셨는지 댓글로 나눠 주세요.</pre></section>
+<p class="note">업로드 추천 시간: 저녁 8시</p>
+<h2>업로드 전 직접 확인</h2>
+<section class="card"><label class="check"><input type="checkbox" data-key="0"><span>국세청 연말정산 종합안내 또는 ☎126에서 부양가족 소득 기준(현행 소득금액 100만 원·총급여 500만 원)이 세제개편안대로 바뀌었는지 확인하고, 바뀌었으면 설명란 [소득 기준, 꼭 확인하세요]를 고친다 (원고·카드는 금액이 없어 그대로 사용 가능)</span></label><label class="check"><input type="checkbox" data-key="1"><span>국가법령정보센터(law.go.kr) 소득세법 제50조·제51조에서 기본공제 150만 원, 경로우대 70세 이상 100만 원이 그대로인지 확인 (검증 환경에서 접속 불가였음)</span></label><label class="check"><input type="checkbox" data-key="2"><span>https://www.korea.kr/news/policyNewsView.do?newsId=148937039 를 열어 따로 사는 부모님 공제 요건(실제 부양, 형제자매 중복 불가)이 설명란과 맞는지 확인</span></label><label class="check"><input type="checkbox" data-key="3"><span>설명란 음원 칸을 vrew.md 음원 기록란에서 채우기</span></label><label class="check"><input type="checkbox" data-key="4"><span>설명란 링크가 클릭되는지 YouTube Studio 미리보기로 확인</span></label><label class="check"><input type="checkbox" data-key="5"><span>AI 목소리가 숫자·영문(연도, 전화번호, 앱 이름)을 제대로 읽는지 들어 보기</span></label><label class="check"><input type="checkbox" data-key="6"><span>휴대폰으로 끝까지 재생: 자막이 얼굴·쇼츠 버튼을 가리지 않는지, 길이 30~60초인지</span></label><label class="check"><input type="checkbox" data-key="7"><span>배경음악 곡명·라이선스를 설명란 [음원] 칸에 채우기</span></label><label class="check"><input type="checkbox" data-key="8"><span>업로드 후 YouTube Studio에서 &#x27;저작권 주장&#x27; 없는지 확인</span></label><label class="check"><input type="checkbox" data-key="9"><span>숫자 카드 장면: 표가 끝까지 보이고, 자막이 표를 가리지 않는지 (자막은 화면 맨 아래로)</span></label></section>
+</main>
+<script>
+var root = document.documentElement;
+var stored = null;
+try { stored = localStorage.getItem("vrew-pack-theme"); } catch (e) {}
+var light = stored ? stored === "light" : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+if (light) root.classList.add("theme-light");
+document.getElementById("theme").addEventListener("click", function () {
+  var on = root.classList.toggle("theme-light");
+  try { localStorage.setItem("vrew-pack-theme", on ? "light" : "dark"); } catch (e) {}
+});
+function fallbackCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+}
+document.querySelectorAll(".copy").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var text = btn.getAttribute("data-copy");
+    var done = function () {
+      var old = btn.textContent; btn.textContent = "복사됨"; btn.classList.add("done");
+      setTimeout(function () { btn.textContent = old; btn.classList.remove("done"); }, 1500);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+var KEY = "vrew-pack-checks:" + document.title;
+var saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+document.querySelectorAll(".check input").forEach(function (box) {
+  box.checked = !!saved[box.dataset.key];
+  box.addEventListener("change", function () {
+    saved[box.dataset.key] = box.checked;
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+  });
+});
+</script>
+</body></html>
