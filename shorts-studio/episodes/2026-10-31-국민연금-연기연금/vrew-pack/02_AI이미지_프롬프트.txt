@@ -15,16 +15,13 @@
   영문: korean woman in her 60s reading an information booklet at a dining table, warm natural light, realistic photo, vertical 9:16, no text in image
 
 [장면 5] 미룬 한 달마다 0.6%씩 붙어요.
-  한글: 탁자 위에 조금씩 높아지는 동전 더미 여러 개, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: several stacks of coins on a table, each stack slightly taller than the last, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 6] 최대 5년까지 미룰 수 있고
-  한글: 다섯 개의 탁상 달력이 나란히 놓인 책상, 숫자는 흐릿하게, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: five desk calendars lined up side by side on a desk, numbers softly blurred, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 7] 5년을 미루면 36%가 늘어나요.
-  한글: 점점 높아지는 나무 블록 계단, 밝은 탁자, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: wooden blocks arranged like rising steps on a bright table, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 8] 다만 미루는 동안에는
   한글: 창가에 앉아 생각에 잠긴 60대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음

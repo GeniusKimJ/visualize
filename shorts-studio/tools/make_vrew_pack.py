@@ -75,6 +75,23 @@ def parse_scenes(folder, script):
     return scenes
 
 
+def parse_numbers(folder):
+    """vrew.md의 ```vrew-numbers``` 블록 → {장면 번호: 카드 번호}. 블록이 없으면 빈 dict."""
+    raw = code_block_after(read(folder, "vrew.md"), r"^", "vrew-numbers")
+    if not raw:
+        return {}
+    try:
+        cards = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise PackError(f"vrew-numbers JSON 형식 오류: {e}")
+    scene_card = {}
+    for i, c in enumerate(cards, 1):
+        scenes = c.get("장면", [])
+        for n in scenes if isinstance(scenes, list) else [scenes]:
+            scene_card[n] = i
+    return scene_card
+
+
 def parse_upload(folder):
     text = read(folder, "upload.md")
     title = re.search(r'^### 추천:\s*\d+안\s*"(.+?)"', text, re.M)
@@ -94,9 +111,13 @@ def parse_upload(folder):
     }
 
 
-def build_texts(script, scenes, up):
+def build_texts(script, scenes, up, scene_card=None):
+    scene_card = scene_card or {}
     prompts, bigtext = [], []
     for i, s in enumerate(scenes, 1):
+        if i in scene_card:
+            prompts.append(f"[장면 {i}] {s['나레이션']}\n  숫자 카드 number-{scene_card[i]}.png 사용 (AI 이미지 없음)")
+            continue
         prompts.append(
             f"[장면 {i}] {s['나레이션']}\n"
             f"  한글: {s['이미지프롬프트_ko']}, {IMAGE_STYLE_KO}\n"
@@ -127,16 +148,24 @@ def card(title, body, copy_text=None, note=""):
     )
 
 
-def build_html(episode, script, scenes, up, has_title=False):
+def build_html(episode, script, scenes, up, has_title=False, scene_card=None):
+    scene_card = scene_card or {}
     scene_cards = []
     for i, s in enumerate(scenes, 1):
         ko = f"{s['이미지프롬프트_ko']}, {IMAGE_STYLE_KO}"
         big = s.get("큰글자") or ""
-        rows = [
-            f'<div class="row"><span class="label">나레이션</span><span>{html.escape(s["나레이션"])}</span></div>',
-            f'<div class="row"><span class="label">AI 이미지</span><span>{html.escape(ko)}</span>'
-            f'<button class="copy small" data-copy="{html.escape(ko, quote=True)}">복사</button></div>',
-        ]
+        rows = [f'<div class="row"><span class="label">나레이션</span><span>{html.escape(s["나레이션"])}</span></div>']
+        if i in scene_card:
+            rows.append(
+                f'<div class="row"><span class="label">숫자 카드</span>'
+                f'<strong>number-{scene_card[i]}.png를 화면 전체로 (AI 이미지·큰 글자 대신)</strong></div>'
+            )
+            big = ""
+        else:
+            rows.append(
+                f'<div class="row"><span class="label">AI 이미지</span><span>{html.escape(ko)}</span>'
+                f'<button class="copy small" data-copy="{html.escape(ko, quote=True)}">복사</button></div>'
+            )
         if big:
             rows.append(
                 f'<div class="row"><span class="label">큰 글자</span><strong>{html.escape(big)}</strong>'
@@ -145,6 +174,18 @@ def build_html(episode, script, scenes, up, has_title=False):
         scene_cards.append(f'<section class="scene"><h4>장면 {i}</h4>{"".join(rows)}</section>')
 
     checks = up["checks"] + ALWAYS_CHECK
+    number_section = ""
+    if scene_card:
+        checks = checks + [NUMBER_CHECK]
+        groups = {}
+        for n, c in sorted(scene_card.items()):
+            groups.setdefault(c, []).append(n)
+        figs = "".join(
+            f'<figure><img src="number-{c}.png" alt="숫자 카드 {c}"><figcaption>number-{c}.png · 장면 '
+            f'{min(ns)}{"~" + str(max(ns)) if len(ns) > 1 else ""}</figcaption></figure>'
+            for c, ns in sorted(groups.items())
+        )
+        number_section = NUMBER_SECTION.format(figs=figs)
     check_items = "".join(
         f'<label class="check"><input type="checkbox" data-key="{i}"><span>{html.escape(c)}</span></label>'
         for i, c in enumerate(checks)
@@ -159,8 +200,18 @@ def build_html(episode, script, scenes, up, has_title=False):
         pinned_card=card("고정댓글", up["pinned"], up["pinned"]),
         when=html.escape(up["when"]) or "—",
         title_section=TITLE_SECTION if has_title else "",
+        number_section=number_section,
         checks=check_items,
     )
+
+
+NUMBER_CHECK = "숫자 카드 장면: 표가 끝까지 보이고, 자막이 표를 가리지 않는지 (자막은 화면 맨 아래로)"
+
+NUMBER_SECTION = """<h2>0-1단계 · 숫자 카드 (표 이미지)</h2>
+<section class="card"><div class="figs">{figs}</div>
+<p class="note">표시된 장면들을 하나로 이어 붙이거나 장면마다 → 이미지 바꾸기 → 같은 폴더의 <strong>number-N.png</strong>를 화면 전체 크기로 넣습니다.
+이 장면들에는 AI 이미지와 큰 글자를 넣지 않습니다. 자막은 화면 맨 아래에 두어 표를 가리지 않게 합니다.</p></section>
+"""
 
 
 TITLE_SECTION = """<h2>0단계 · 첫 장면 강조 제목</h2>
@@ -198,6 +249,8 @@ button{{font:inherit;cursor:pointer;border:0;border-radius:8px}}
 .check input{{width:22px;height:22px;margin-top:3px;flex:none}}
 .check span,pre,.row span{{min-width:0;overflow-wrap:anywhere}}
 .steps li{{margin:4px 0}}
+.figs{{display:flex;gap:12px;flex-wrap:wrap}} .figs figure{{margin:0;flex:0 1 200px}}
+.figs img{{width:100%;border-radius:10px;display:block}} .figs figcaption{{color:var(--muted);font-size:15px;margin-top:4px}}
 </style></head>
 <body><main>
 <header><h1>Vrew 작업 카드</h1><button id="theme" type="button">밝게/어둡게</button></header>
@@ -209,7 +262,7 @@ button{{font:inherit;cursor:pointer;border:0;border-radius:8px}}
 <li>배경음악(오디오 보관함·Vrew 음원) → 내보내기 mp4</li>
 <li>제목·설명란·고정댓글 복사해 업로드</li>
 </ol>
-{title_section}<h2>1단계 · 대본</h2>
+{title_section}{number_section}<h2>1단계 · 대본</h2>
 {script_card}
 <h2>2~3단계 · 장면별 이미지와 큰 글자</h2>
 {scenes}
@@ -274,16 +327,21 @@ def main():
         check_gates(folder)
         script = parse_script(folder)
         scenes = parse_scenes(folder, script)
+        scene_card = parse_numbers(folder)
         up = parse_upload(folder)
     except PackError as e:
         print(f"패키지를 만들지 않았습니다: {e}")
         return 1
     out = folder / "vrew-pack"
     out.mkdir(exist_ok=True)
-    for name, text in build_texts(script, scenes, up).items():
+    for name, text in build_texts(script, scenes, up, scene_card).items():
         (out / name).write_text(text, encoding="utf-8")
     has_title = (out / "title-overlay.png").exists()
-    (out / "index.html").write_text(build_html(folder.name, script, scenes, up, has_title), encoding="utf-8")
+    missing = sorted({c for c in scene_card.values() if not (out / f"number-{c}.png").exists()})
+    if missing:
+        print(f"패키지를 만들지 않았습니다: 숫자 카드 이미지가 없습니다 (number-{missing[0]}.png). make_number_card.js를 먼저 실행하세요.")
+        return 1
+    (out / "index.html").write_text(build_html(folder.name, script, scenes, up, has_title, scene_card), encoding="utf-8")
     print(f"완료: {out} (장면 {len(scenes)}개)")
     return 0
 

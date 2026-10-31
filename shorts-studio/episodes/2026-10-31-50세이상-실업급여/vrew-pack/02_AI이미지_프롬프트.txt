@@ -15,32 +15,25 @@
   영문: desk calendar and a well-used planner on a desk, numbers softly blurred, warm natural light, realistic photo, vertical 9:16, no text in image
 
 [장면 5] 50세 이상이면 가입 1년 미만은 120일,
-  한글: 얇은 달력 한 권이 놓인 밝은 탁자, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: a single thin calendar on a bright table, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 6] 1년 이상 3년 미만은 180일,
-  한글: 책상 위에 나란히 놓인 달력 세 권, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: three calendars lined up on a desk, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 7] 3년 이상 5년 미만은 210일,
-  한글: 책장에 차곡차곡 꽂힌 다이어리 여러 권, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: several planners neatly stacked on a bookshelf, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 8] 5년 이상 10년 미만은 240일,
-  한글: 오래 쓴 사무실 책상과 정돈된 서류철, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: a long-used office desk with tidy file folders, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 9] 10년 이상이면 270일이에요.
-  한글: 사무실에서 함께 웃는 50~60대 한국인 동료들, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean coworkers in their 50s and 60s smiling together in an office, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 10] 50세 미만은 120일에서 240일이라
-  한글: 사무실에서 일하는 30~40대 한국인 직장인, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean office workers in their 30s and 40s working in an office, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 11] 가입 1년 이상이면 50세 이상이 더 길어요.
-  한글: 공원 벤치에서 함께 미소 짓는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
-  영문: korean couple in their 60s smiling together on a park bench, warm natural light, realistic photo, vertical 9:16, no text in image
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
 
 [장면 12] 장애인도 50세 이상과 같은 기준이에요.
   한글: 상담 창구에서 상담원과 이야기하는 휠체어를 탄 50대 한국인 남성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
