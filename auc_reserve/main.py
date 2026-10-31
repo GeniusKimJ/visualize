@@ -59,6 +59,8 @@ def load_config(path):
     cfg.setdefault("fast_window_sec", 20)         # 예상 시각 ±이 초 안에서는
     cfg.setdefault("fast_poll_interval_sec", 0.5) # 더 촘촘하게
     cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
+    cfg.setdefault("auto_submit", False)          # true: [예약하기] → [예]까지 자동 (결제는 직접)
+    cfg.setdefault("retry_on_conflict", 1)        # 먼저 예약돼 실패하면 다시 시도할 횟수
     cfg.setdefault("max_wait_after_open_min", 30)
     cfg.setdefault("ntp_server", "time.google.com")
     cfg.setdefault("browser", {})
@@ -514,6 +516,33 @@ class Bot:
                 return False
         return self.final_visible()
 
+    def auto_submit(self):
+        """[예약하기] → 확인 레이어 [예]. 반환: (성공 여부, 설명)."""
+        btn = self.page.locator(S.FINAL_SUBMIT).first
+        self.last_dialog = ""
+        url = self.page.url
+        btn.click()
+        try:
+            self.page.locator(S.CONFIRM_YES).wait_for(state="visible", timeout=3000)
+        except Exception:  # noqa: BLE001
+            # 레이어 대신 경고창(인원 수 오류 등)이 뜬 경우
+            return False, f"확인창이 뜨지 않음 {self.last_dialog}".strip()
+        txt = self.page.locator(S.CONFIRM_LAYER_TEXT).first.inner_text().strip()
+        if not any(k in txt for k in S.CONFIRM_EXPECT_TEXTS):
+            return False, f"예상과 다른 확인창: {txt}"
+        log.info("확인창 '%s' → [예]", txt)
+        self.page.locator(S.CONFIRM_YES).click()
+        try:
+            self.page.wait_for_url(lambda u: u != url, timeout=10000, wait_until="domcontentloaded")
+        except Exception:  # noqa: BLE001
+            pass
+        self.settle(300)
+        if any(k in self.last_dialog for k in S.SUBMIT_FAIL_TEXTS):
+            return False, self.last_dialog
+        if any(p in self.page.url for p in S.COMPLETE_URL_PARTS):
+            return True, self.page.url.split("/")[-1]
+        return False, f"제출 후 화면 확인 필요 ({self.page.url.split('/')[-1]}) {self.last_dialog}".strip()
+
     def wait_user_complete(self, minutes):
         self.phase = "user"
         deadline = time.monotonic() + minutes * 60
@@ -567,6 +596,16 @@ class Bot:
                 return "마감", label + " (빈 코트 없음)"
             if self.picked_courts:
                 label += " 코트 " + ",".join(f"{n}번" for n in self.picked_courts)
+            if ok and self.cfg.get("auto_submit"):
+                t1 = time.monotonic()
+                sent, why = self.auto_submit()
+                log.info("자동 제출 %s (%.0fms): %s", "완료" if sent else "실패", (time.monotonic() - t1) * 1000, why)
+                if sent:
+                    self.n.alert(f"{label} 예약 제출 완료! 브라우저에서 결제를 진행해주세요")
+                    return "성공", label + " (제출됨, 결제 필요)"
+                self.screenshot("submit_fail")
+                self.n.alert(f"{label} 자동 제출 실패: {why.rstrip('.')}. 화면을 확인해주세요")
+                return "실패", f"{label} ({why})"
             if ok:
                 self.n.alert(f"{label}, [예약하기] → [예]를 눌러주세요")
             else:
@@ -594,6 +633,12 @@ def book_all(bot, targets, cfg, fast_first=None):
             results.append((tg, "건너뜀", "최대 건수 도달"))
             continue
         status, detail = bot.try_book(tg, fast_first if i == 0 else None)
+        for _ in range(int(cfg.get("retry_on_conflict", 1))):
+            # 다른 사람이 먼저 제출해 실패한 경우: 달력부터 다시 열어 남은 시간/코트로 즉시 재시도
+            if status != "실패" or not any(k in detail for k in ("이미", "마감", "초과")):
+                break
+            log.info("충돌로 실패 → 남은 시간/코트로 재시도")
+            status, detail = bot.try_book(tg)
         log.info("결과 %s: %s %s", tg.label(), status, detail)
         results.append((tg, status, detail))
         if status == "성공":

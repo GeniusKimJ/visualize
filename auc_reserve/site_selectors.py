@@ -65,6 +65,16 @@ FINAL_BUTTON_TEXTS = ["예약하기", "신청완료", "예약신청", "결제", 
 # (이 사이트의 최종 확인은 HTML 레이어 .confirm_layer_box 라서 사용자가 직접 [예]를 누름)
 FINAL_CONFIRM_KEYWORDS = ["신청하시겠습니까", "예약하시겠습니까", "결제하시겠습니까", "환불 불가에 동의"]
 
+# ── 자동 제출 (config auto_submit: true 일 때만) ─────────────
+# [예약하기]를 누르면 브라우저 기본 창이 아니라 HTML 확인 레이어가 뜬다.
+CONFIRM_LAYER = ".confirm_layer_box"
+CONFIRM_LAYER_TEXT = ".confirm_layer_box > .txt"
+CONFIRM_YES = '.confirm_layer_box a.common_btn.regist'          # [예]
+# 레이어 문구가 이 중 하나일 때만 [예]를 누른다 (엉뚱한 확인창 방지)
+CONFIRM_EXPECT_TEXTS = ["환불 불가에 동의", "예약하시겠습니까", "현장결제로 예약"]
+# 제출 후 이 문구의 경고창이 뜨면 실패로 판단 (다른 사람이 먼저 예약 등)
+SUBMIT_FAIL_TEXTS = ["이미", "마감", "초과", "불가", "실패", "오류", "선택해 주세요", "사용인원"]
+
 # ── 완료 감지 ────────────────────────────────────────────
 # [예]를 누르면 reservationStep3로 제출된다. 그 뒤 결제 화면은 아직 미확인.
 COMPLETE_TEXTS = ["예약이 완료", "예약완료되었습니다", "결제가 완료", "신청되었습니다"]
