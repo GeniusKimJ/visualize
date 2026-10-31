@@ -1,0 +1,5 @@
+# 형식: URL [viral|control]   (라벨 생략 시 조회수/구독자 ≥ 10 이면 viral 로 자동 분류)
+# 예시: Ifverse "What If" 3부작
+https://www.youtube.com/watch?v=MroF1XmHOZw
+https://www.youtube.com/watch?v=9iB2XSmhxKo
+https://www.youtube.com/watch?v=kOmEUGt5tzU
