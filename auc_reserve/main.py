@@ -119,6 +119,8 @@ class Bot:
         self.phase = "auto"            # auto: 스크립트 진행 / user: 사용자 최종 신청 단계
         self.last_dialog = ""
         self.final_confirm_blocked = False
+        self.no_court = False
+        self.picked_courts = []
         self.last_access = 0.0
         self.pw = self.ctx = self.page = None
 
@@ -322,8 +324,38 @@ class Bot:
                 else:
                     el.fill(str(val))
                 log.info("신청서 입력: %s", key)
+                if S.AFTER_FILL_JS:
+                    self.page.evaluate(S.AFTER_FILL_JS)
             except Exception as e:  # noqa: BLE001
                 log.warning("신청서 입력 실패(%s): %s", key, e)
+
+    def select_courts(self):
+        """코트 선택 화면이면 config의 courts 우선순위대로 체크. 반환: 선택한 코트 번호 목록 (화면이 아니면 None)."""
+        boxes = self.page.locator(S.COURT_CHECKBOX)
+        if not boxes.count():
+            return None
+        # 예약된/점검 코트: disabled 이거나 라벨에 색 배경(빨강/주황/초록)이 칠해진 경우
+        info = boxes.evaluate_all("""els => els.map(e => {
+            const lb = e.id ? document.querySelector('label[for="' + e.id + '"]') : null;
+            const st = ((lb && lb.getAttribute('style')) || '') + (e.getAttribute('style') || '');
+            const bg = lb ? getComputedStyle(lb).backgroundColor : '';
+            const colored = /background/i.test(st) || ['rgb(255, 0, 0)', 'rgb(255, 165, 0)', 'rgb(0, 128, 0)'].includes(bg);
+            return {no: parseInt(e.value), ok: !e.disabled && !colored, checked: e.checked};
+        })""")
+        free = [c["no"] for c in info if c["ok"]]
+        want = int(self.cfg.get("court_count", 1))
+        want = max(1, min(want, S.COURT_MAX))
+        order = [n for n in self.cfg.get("courts", []) if n in free]
+        if self.cfg.get("court_fallback_any", True):
+            order += [n for n in free if n not in order]
+        pick = order[:want]
+        log.info("빈 코트 %s → 선택 %s", free, pick)
+        for c in info:
+            if c["checked"] and c["no"] not in pick:
+                self.page.locator(f'{S.COURT_CHECKBOX}[value="{c["no"]}"]').uncheck()
+        for n in pick:
+            self.page.locator(f'{S.COURT_CHECKBOX}[value="{n}"]').check()
+        return pick
 
     def check_agreements(self):
         boxes = self.page.locator(S.AGREE_CHECKBOXES)
@@ -349,6 +381,13 @@ class Bot:
         for _ in range(max_steps):
             if not self.handle_blockers():
                 return False
+            picked = self.select_courts()
+            if picked is not None:
+                if not picked:
+                    log.info("선택 가능한 코트 없음")
+                    self.no_court = True
+                    return False
+                self.picked_courts = picked
             self.fill_applicant()
             self.check_agreements()
             if self.final_confirm_blocked or self.final_visible():
@@ -391,6 +430,8 @@ class Bot:
         """반환: (상태, 설명). 상태 = 성공 | 마감 | 미완료 | 실패"""
         self.final_confirm_blocked = False
         self.last_dialog = ""
+        self.no_court = False
+        self.picked_courts = []
         try:
             self.open_date(tg.day)
             if not self.handle_blockers():
@@ -405,8 +446,13 @@ class Bot:
             self.settle()
             if any(k in self.last_dialog for k in S.UNAVAILABLE_DIALOG_TEXTS):
                 return "마감", self.last_dialog
-            if self.proceed_to_final():
-                self.n.alert(f"{label}, 최종 신청 버튼을 눌러주세요")
+            ok = self.proceed_to_final()
+            if self.no_court:
+                return "마감", label + " (빈 코트 없음)"
+            if self.picked_courts:
+                label += " 코트 " + ",".join(f"{n}번" for n in self.picked_courts)
+            if ok:
+                self.n.alert(f"{label}, [예약하기] → [예]를 눌러주세요")
             else:
                 self.screenshot("flow_stuck")
                 self.n.alert(f"{label}, 신청 화면을 끝까지 자동 진행하지 못했습니다. 직접 진행해주세요")

@@ -40,32 +40,21 @@ copy .env.example .env
 - **로그인:** `/sign/in/base/user` (아이디 `#id`, 비밀번호는 EasykeyTec 보호). 안양시 통합 로그인(SSO)도 있음
 - **주의:** 일정 시간 동안 이용이 없으면 자동 로그아웃됩니다. 다른 IP에서 같은 계정으로 로그인하면 기존 접속이 끊깁니다.
 
-## ⚠ 처음 한 번: 신청서 셀렉터 맞추기 (필수)
+## 예약 흐름과 자동화 범위
 
-로그인 전 화면(로그인, 달력, 시간표)은 실제 사이트에서 확인했습니다.
-**로그인 뒤 화면(신청서 `reservationStep2` 이후)은 아직 추정값**이라 맞춰야 합니다.
+| 단계 | 화면 | 누가 |
+|---|---|---|
+| 1 | 달력에서 `가` 시간 클릭 | 스크립트 |
+| 2 | 코트 선택 (`reservationStep2`, 1~12번, 최대 2면) → [다음] | 스크립트 (`courts` 우선순위) |
+| 3 | 사용인원 입력 (`reservationStep2_2`) | 스크립트 (`applicant.사용인원`) |
+| 4 | **[예약하기] → 확인창 [예]** | **사용자** |
+| 5 | 결제 (`reservationStep3` 이후) | 사용자 |
 
-1. `python main.py --inspect` 실행
-2. 열린 브라우저에서 아래 화면으로 차례로 이동하고, 화면마다 콘솔에서 Enter를 누릅니다.
-   - 로그인 페이지 / 로그인 후 메인
-   - 예약 달력 (오픈 전 주와 오픈된 주 둘 다)
-   - 날짜를 누른 뒤 시간표
-   - 신청서 화면 / 최종 확인 화면 (**최종 버튼은 누르지 마세요**)
-3. `logs/inspect_*.html`, `.json`, `.png`가 저장됩니다.
-   이 파일을 Claude에게 주면서 "site_selectors.py 맞춰줘"라고 하면 됩니다.
-4. `python main.py --check`로 각 셀렉터에 걸리는 요소 개수를 확인합니다. 0이면 다시 수정합니다.
+**1~3단계에서는 서버에 아무것도 잡히지 않습니다.** 코트 선택과 인원 입력은 브라우저 안에서만 처리됩니다.
+다른 사람이 같은 시간과 코트로 먼저 [예]를 누르면 그 사람이 가져갑니다. 알림이 오면 바로 [예약하기] → [예]를 누르세요.
 
-주요 항목:
-
-| 상수 | 뜻 |
-|---|---|
-| `LOGIN_URL`, `LOGIN_ID_INPUT`, `LOGGED_IN_MARKER` | 로그인 페이지, 아이디 칸, 로그인 상태 표시(로그아웃 버튼) |
-| `CALENDAR_FIRST_OF_MONTH` | 달력 URL에 그 달 1일을 넣을지, 날짜 그대로 넣을지 |
-| `DATE_CELL`, `NOT_OPEN_TEXTS` | 날짜 칸, 오픈 전 표시 문구 → **오픈 여부 판정 기준** |
-| `SLOT_ITEM`, `SLOT_CLICK`, `UNAVAILABLE_TEXTS` | 시간표 한 행, 행 안의 신청 버튼, 마감 문구 |
-| `APPLICANT_FIELDS`, `AGREE_CHECKBOXES`, `FLOW_NEXT_BUTTONS` | 신청서 입력칸, 동의 체크, 중간 단계 버튼 |
-| `FINAL_SUBMIT`, `FINAL_BUTTON_TEXTS`, `FINAL_CONFIRM_KEYWORDS` | 최종 버튼 (감지만 하고 절대 누르지 않음) |
-| `COMPLETE_TEXTS` | 예약 완료 문구 |
+결제 화면(5단계)과, 이미 예약된 코트가 코트 선택 화면에 어떻게 표시되는지는 아직 확인하지 못했습니다.
+처음 실제로 예약할 때 `--inspect`로 저장해 두면 더 정확히 맞출 수 있습니다.
 
 ## config.json
 
@@ -77,7 +66,10 @@ copy .env.example .env
 | `skip_dates` | 이번 주는 건너뛸 날짜 |
 | `default_times`, `default_facilities` | `extra_dates`에 시간·코트를 안 적었을 때 쓰는 값 |
 | `max_per_week` | 주간 최대 예약 건수 |
-| `applicant` | 신청서 자동 입력값 (키는 `APPLICANT_FIELDS`와 같아야 함) |
+| `courts` | 원하는 코트 번호 우선순위 (예: `[5, 6, 7, 8]`) |
+| `court_count` | 한 번에 잡을 코트 수 (1 또는 2) |
+| `court_fallback_any` | 원하는 코트가 없으면 남은 아무 코트나 선택 (`true`/`false`) |
+| `applicant` | `사용인원`: 코트 수 × 2 이상, × 6 이하 (1면이면 2~6명) |
 | `notify` | 텔레그램 봇 토큰, chat_id, 소리 사용 여부 |
 | `watch_on_fail` | 전부 마감일 때 감시 모드 전환: `ask` / `auto` / `off` |
 | `final_wait_min` | 최종 신청을 기다리는 시간(분) |
