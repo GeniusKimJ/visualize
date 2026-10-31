@@ -75,6 +75,13 @@ CONFIRM_EXPECT_TEXTS = ["환불 불가에 동의", "예약하시겠습니까", "
 # 제출 후 이 문구의 경고창이 뜨면 실패로 판단 (다른 사람이 먼저 예약 등)
 SUBMIT_FAIL_TEXTS = ["이미", "마감", "초과", "불가", "실패", "오류", "선택해 주세요", "사용인원"]
 
+# ── 결제 직전 화면 (reservationStep3, 2026-10-31 확인) ──────────
+# [예]를 누르면 이 화면이 뜨고, 이때 서버에 예약번호(facilityResNo)가 생긴다 = 자리가 잡힘(결제 전).
+STEP3_MARKER = "#paymentForm"
+STEP3_RES_NO = '#paymentForm input[name="facilityResNo"]'
+STEP3_AGREES = ["#list-2", "#list-3", "#list-4"]   # 개인정보 수집, 제3자 제공, 취소수수료 동의 (필수)
+PAY_BUTTON = "a.join-next-btn"                    # [결제하기] — 스크립트는 절대 누르지 않음
+
 # ── 완료 감지 ────────────────────────────────────────────
 # [예]를 누르면 reservationStep3로 제출된다. 그 뒤 결제 화면은 아직 미확인.
 COMPLETE_TEXTS = ["예약이 완료", "예약완료되었습니다", "결제가 완료", "신청되었습니다"]

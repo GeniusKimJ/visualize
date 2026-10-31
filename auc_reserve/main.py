@@ -61,6 +61,7 @@ def load_config(path):
     cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
     cfg.setdefault("auto_submit", False)          # true: [예약하기] → [예]까지 자동 (결제는 직접)
     cfg.setdefault("retry_on_conflict", 1)        # 먼저 예약돼 실패하면 다시 시도할 횟수
+    cfg.setdefault("auto_agree_terms", True)      # 결제 화면의 필수 약관 3개 자동 체크 ([결제하기]는 직접)
     cfg.setdefault("max_wait_after_open_min", 30)
     cfg.setdefault("ntp_server", "time.google.com")
     cfg.setdefault("browser", {})
@@ -539,6 +540,16 @@ class Bot:
         self.settle(300)
         if any(k in self.last_dialog for k in S.SUBMIT_FAIL_TEXTS):
             return False, self.last_dialog
+        if self.count(S.STEP3_MARKER):
+            nos = self.page.locator(S.STEP3_RES_NO).evaluate_all("els => els.map(e => e.value)")
+            if not nos:
+                return False, "결제 화면에 예약번호 없음"
+            if self.cfg.get("auto_agree_terms", True):
+                for sel in S.STEP3_AGREES:
+                    if self.count(sel):
+                        self.page.locator(sel).check()
+                log.info("필수 약관 동의 체크 완료")
+            return True, "예약번호 " + ",".join(nos)
         if any(p in self.page.url for p in S.COMPLETE_URL_PARTS):
             return True, self.page.url.split("/")[-1]
         return False, f"제출 후 화면 확인 필요 ({self.page.url.split('/')[-1]}) {self.last_dialog}".strip()
@@ -601,8 +612,8 @@ class Bot:
                 sent, why = self.auto_submit()
                 log.info("자동 제출 %s (%.0fms): %s", "완료" if sent else "실패", (time.monotonic() - t1) * 1000, why)
                 if sent:
-                    self.n.alert(f"{label} 예약 제출 완료! 브라우저에서 결제를 진행해주세요")
-                    return "성공", label + " (제출됨, 결제 필요)"
+                    self.n.alert(f"{label} 자리 확보 ({why})! 브라우저에서 [결제하기]를 눌러 결제해주세요")
+                    return "성공", f"{label} ({why}, 결제 필요)"
                 self.screenshot("submit_fail")
                 self.n.alert(f"{label} 자동 제출 실패: {why.rstrip('.')}. 화면을 확인해주세요")
                 return "실패", f"{label} ({why})"
