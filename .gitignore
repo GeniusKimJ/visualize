@@ -12,6 +12,7 @@ Thumbs.db
 *.html
 !assets/templates/*.html
 !examples/*.html
+!tools/*.html
 
 # Eval results (local only)
 eval/eval-results.md
