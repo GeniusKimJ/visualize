@@ -43,3 +43,22 @@ class ParseCalendar(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+from main import is_logged_out_html  # noqa: E402
+
+
+class LoginState(unittest.TestCase):
+    def test_logged_out_link(self):
+        self.assertTrue(is_logged_out_html('<a href="/sign/in" class="header__links__1__login">로그인</a>'))
+
+    def test_commented_sso_link_ignored(self):
+        html = ('<!-- <a href="#" onclick="fnLogin();" class="header__links__1__login" '
+                'style="display:none;">SSOLogin</a> -->'
+                '<a href="#" onclick="fnLogout()">로그아웃</a>')
+        self.assertFalse(is_logged_out_html(html))
+
+    def test_real_page(self):
+        p = Path("/tmp/auc/cal.html")
+        if p.exists():
+            self.assertTrue(is_logged_out_html(p.read_text(encoding="utf-8")))

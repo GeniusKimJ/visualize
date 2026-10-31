@@ -300,7 +300,7 @@ class App:
             ("burst_interval_sec", "오픈 ±3초 간격(초, 최소 0.3)", "0.3"),
             ("telegram_token", "텔레그램 봇 토큰", ""),
             ("chat_id", "텔레그램 chat_id", ""),
-            ("auc_id", "사이트 아이디 (자동 입력용)", ""),
+            ("auc_id", "공사회원 아이디 (공사회원 로그인 시 자동 입력)", ""),
         ]
         for i, (key, label, default) in enumerate(rows):
             ttk.Label(f, text=label).grid(row=i, column=0, sticky="w", pady=2)
@@ -308,6 +308,12 @@ class App:
             ttk.Entry(f, textvariable=v, width=46, show="*" if key == "telegram_token" else "").grid(
                 row=i, column=1, columnspan=2, sticky="w", padx=8)
             self.adv[key] = v
+        r0 = len(rows)
+        ttk.Label(f, text="로그인 방식").grid(row=r0, column=0, sticky="w", pady=2)
+        self.login_type = tk.StringVar(value="통합 로그인 (안양시)")
+        ttk.Combobox(f, textvariable=self.login_type, state="readonly", width=24,
+                     values=["통합 로그인 (안양시)", "공사회원 아이디"]).grid(row=r0, column=1, sticky="w", padx=8)
+        rows = rows + [None]
         self.sound = tk.BooleanVar(value=True)
         self.block_images = tk.BooleanVar(value=True)
         self.turbo = tk.BooleanVar(value=True)
@@ -359,6 +365,7 @@ class App:
         self.sound.set(bool(n.get("sound", True)))
         self.block_images.set(bool(c.get("block_images", True)))
         self.turbo.set(bool(c.get("turbo", True)))
+        self.login_type.set("공사회원 아이디" if c.get("login_type") == "member" else "통합 로그인 (안양시)")
         self.adv["auc_id"].set(self.read_env_id())
 
     def collect(self):
@@ -397,6 +404,7 @@ class App:
         c["fast_poll_interval_sec"] = max(0.3, float(self.adv["fast_poll_interval_sec"].get()))
         c["burst_interval_sec"] = max(0.3, float(self.adv["burst_interval_sec"].get()))
         c["turbo"] = self.turbo.get()
+        c["login_type"] = "member" if self.login_type.get().startswith("공사회원") else "sso"
         c["notify"] = {"telegram_token": self.adv["telegram_token"].get().strip(),
                        "chat_id": self.adv["chat_id"].get().strip(), "sound": self.sound.get()}
         c["block_images"] = self.block_images.get()

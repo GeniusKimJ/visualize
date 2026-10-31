@@ -16,7 +16,8 @@ SERVER_TIME_PRECISE_URL = "https://www.auc.or.kr/robots.txt"   # 작은 파일�
 CALENDAR_FIRST_OF_MONTH = True
 
 # ── 로그인 ──────────────────────────────────────────────
-LOGIN_ID_INPUT = "#loginForm input#id"
+LOGIN_ID_INPUT = "#loginForm input#id"            # 공사회원 로그인 아이디 칸
+SSO_LOGIN_BUTTON = "a.total-loginN__btn"          # [통합 로그인 바로가기] → www.anyang.go.kr SSO
 # 로그아웃 상태일 때 상단에 보이는 '로그인' 링크
 LOGGED_OUT_MARKER = "a.header__links__1__login"
 LOGGED_IN_MARKER = 'a:has-text("로그아웃"), a[onclick*="fnLogout"]'

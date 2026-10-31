@@ -80,7 +80,8 @@ def load_config(path):
     cfg.setdefault("burst_window_sec", 3)         # 오픈 ±이 초 안에서는
     cfg.setdefault("burst_interval_sec", 0.3)     # 최소 간격으로
     cfg.setdefault("open_offset_ms", 30)          # 오픈 순간 + 이 ms에 반드시 한 번 확인
-    cfg.setdefault("turbo", True)                 # 화면마다 스크립트 한 번으로 처리 (빠름)
+    cfg.setdefault("turbo", True)
+    cfg.setdefault("login_type", "sso")           # sso: 안양시 통합 로그인 / member: 공사회원 아이디                 # 화면마다 스크립트 한 번으로 처리 (빠름)
     cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
     cfg.setdefault("auto_submit", False)          # true: [예약하기] → [예]까지 자동 (결제는 직접)
     cfg.setdefault("retry_on_conflict", 1)        # 먼저 예약돼 실패하면 다시 시도할 횟수
@@ -134,13 +135,21 @@ TIME_RE = re.compile(r"(\d{1,2}):(\d{2})(\s*[~\-–]\s*\d{1,2}:\d{2})?")
 CAL_SLOT_RE = r"fn_facilityResSelect\('([^']*)','([^']*)','{ymd}','(\d{{4}})','(\d{{4}})'\)"
 
 
+LOGIN_LINK_RE = re.compile(r'class="header__links__1__login"[^>]*>\s*로그인\s*</a>')
+
+
+def is_logged_out_html(html):
+    """페이지 HTML 상단에 '로그인' 링크가 보이면 로그아웃 상태 (주석 안의 숨은 링크는 무시)."""
+    return bool(LOGIN_LINK_RE.search(re.sub(r"<!--.*?-->", "", html, flags=re.S)))
+
+
 def parse_calendar(html, d):
     """달력 HTML에서 d 날짜 상태를 읽는다.
 
     반환: dict(opened=시간 목록이 그려졌는지, logged_out=로그아웃 상태인지,
                slots={"1850": "fn_facilityResSelect(...)"} 예약가능한 시간만)
     """
-    logged_out = "header__links__1__login" in html
+    logged_out = is_logged_out_html(html)
     k = html.find("calendar_table")
     cal = html[k:] if k >= 0 else html
     m = re.search(r'<span class="[^"]*">\s*%02d\s*</span>\s*</div>\s*<ul class="yy-list">(.*?)(?=<td|</tr|</tbody)'
@@ -264,6 +273,7 @@ class Bot:
         self.pw = self.ctx = self.page = None
         self.mode = "launch"
         self.chrome_proc = None
+        self.in_login = False
 
     # ── 시작/종료 ──
     def start(self):
@@ -362,6 +372,9 @@ class Bot:
         d.accept()
 
     def _on_new_page(self, p):
+        if self.in_login:
+            log.info("로그인 창 열림: %s", p.url)
+            return
         log.warning("새 창 열림: %s", p.url)
         self.n.alert("새 창이 열렸습니다(인증 팝업일 수 있음). 브라우저를 확인해주세요.")
 
@@ -415,6 +428,17 @@ class Bot:
             return False
         return self.count(S.LOGGED_IN_MARKER) > 0
 
+    def logged_in_quiet(self):
+        """화면은 건드리지 않고 브라우저 쿠키로 메인 페이지를 조회해 로그인 여부 확인. 실패하면 None."""
+        try:
+            r = self.ctx.request.get(S.MAIN_URL, timeout=8000)
+            html = r.text()
+        except Exception:  # noqa: BLE001
+            return None
+        if not r.ok or "header__links" not in html:
+            return None
+        return not is_logged_out_html(html)
+
     def check_login(self):
         """메인 페이지를 열어 로그인 상태 확인."""
         self.goto(S.MAIN_URL)
@@ -423,25 +447,50 @@ class Bot:
         return ok
 
     def ensure_login(self, wait_min=5):
-        if self.check_login():
+        if self.logged_in_quiet() or self.check_login():
             return True
         self.goto(S.LOGIN_URL)
         if "sign/in" not in self.page.url:
             log.warning("로그인 페이지가 열리지 않았습니다 (%s). 브라우저에서 직접 로그인해주세요.", self.page.url)
-        uid = os.environ.get("AUC_ID", "")
-        if uid and self.count(S.LOGIN_ID_INPUT):
-            self.page.locator(S.LOGIN_ID_INPUT).first.fill(uid)
-            log.info("아이디 자동 입력: %s", mask(uid))
-        self.n.alert("로그인이 필요합니다. 브라우저에서 비밀번호를 입력하고 로그인해주세요.")
-        deadline = time.monotonic() + wait_min * 60
-        while time.monotonic() < deadline:
-            if self.is_logged_in():
-                log.info("로그인 확인")
-                self.last_access = time.monotonic()
-                return True
-            nap(1)
-        self.n.alert(f"{wait_min}분 안에 로그인이 확인되지 않았습니다.")
-        return False
+        self.in_login = True
+        try:
+            if self.cfg.get("login_type", "sso") == "sso":
+                # 통합 로그인(안양시 SSO): [통합 로그인 바로가기]를 눌러 안양시 로그인 화면으로
+                if self.count(S.SSO_LOGIN_BUTTON):
+                    try:
+                        self.page.locator(S.SSO_LOGIN_BUTTON).first.click()
+                    except Exception:  # noqa: BLE001
+                        pass
+                self.n.alert("로그인이 필요합니다. 크롬에서 '통합 로그인'으로 로그인해주세요.")
+            else:
+                uid = os.environ.get("AUC_ID", "")
+                if uid and self.count(S.LOGIN_ID_INPUT):
+                    self.page.locator(S.LOGIN_ID_INPUT).first.fill(uid)
+                    log.info("아이디 자동 입력: %s", mask(uid))
+                self.n.alert("로그인이 필요합니다. 브라우저에서 비밀번호를 입력하고 로그인해주세요.")
+            deadline = time.monotonic() + wait_min * 60
+            last_quiet = 0.0
+            while time.monotonic() < deadline:
+                # 1) 지금 화면이 사이트로 돌아와 로그아웃 링크가 사라졌는지
+                try:
+                    if "auc.or.kr" in self.page.url and self.is_logged_in():
+                        break
+                except Exception:  # noqa: BLE001
+                    pass
+                # 2) 다른 탭이나 SSO를 거쳐 로그인했을 수도 있으니 3초마다 조용히 확인
+                if time.monotonic() - last_quiet > 3:
+                    last_quiet = time.monotonic()
+                    if self.logged_in_quiet():
+                        break
+                nap(0.5)
+            else:
+                self.n.alert(f"{wait_min}분 안에 로그인이 확인되지 않았습니다.")
+                return False
+            log.info("로그인 확인")
+            self.last_access = time.monotonic()
+            return True
+        finally:
+            self.in_login = False
 
     # ── 우회하지 않는 단계 감지 ──
     def find_blocker(self):

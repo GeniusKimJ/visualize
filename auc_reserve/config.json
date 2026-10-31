@@ -27,6 +27,7 @@
   "court_fallback_any": true,
   "applicant": { "사용인원": 4 },
   "auto_submit": true,
+  "login_type": "sso",
   "retry_on_conflict": 1,
   "auto_agree_terms": false,
   "notify": { "telegram_token": "", "chat_id": "", "sound": true },
