@@ -85,6 +85,10 @@ def fmt_dt(dt):
 TIME_RE = re.compile(r"(\d{1,2}):(\d{2})(\s*[~\-–]\s*\d{1,2}:\d{2})?")
 
 
+def fill_date(template, d):
+    return template.format(ymd=d.isoformat(), ymd8=d.strftime("%Y%m%d"), day=d.day, dd=f"{d.day:02d}")
+
+
 def slot_starts_at(text, hhmm):
     """'19:00~20:00' 같은 범위는 시작 시각만 비교 ('20:00'이 19시 슬롯에 걸리지 않도록)."""
     h, m = hhmm.split(":")
@@ -198,6 +202,8 @@ class Bot:
 
     # ── 로그인 ──
     def is_logged_in(self):
+        if self.count(S.LOGGED_OUT_MARKER):
+            return False
         return self.count(S.LOGGED_IN_MARKER) > 0
 
     def check_login(self):
@@ -253,7 +259,7 @@ class Bot:
 
     # ── 달력 / 슬롯 ──
     def date_cell(self, d):
-        return S.DATE_CELL.format(ymd=d.isoformat(), ymd8=d.strftime("%Y%m%d"), day=d.day)
+        return fill_date(S.DATE_CELL, d)
 
     def goto_calendar(self, d):
         self.goto(calendar_url(d, S.CALENDAR_FIRST_OF_MONTH))
@@ -278,8 +284,8 @@ class Bot:
             else:
                 log.warning("%s 날짜 칸을 찾지 못함 (DATE_CELL 확인 필요)", d)
 
-    def find_slot(self, times, facilities):
-        items = self.page.locator(S.SLOT_ITEM)
+    def find_slot(self, d, times, facilities):
+        items = self.page.locator(fill_date(S.SLOT_ITEM, d))
         rows = []
         for i in range(items.count()):
             try:
@@ -287,14 +293,15 @@ class Bot:
             except Exception:  # noqa: BLE001
                 continue
         for t in times:
-            for f in facilities:
+            for f in (facilities or [""]):      # 코트 구분이 없는 시설은 facilities를 비워 둠
                 for i, txt in rows:
                     if slot_starts_at(txt, t) and f in txt:
-                        if any(u in txt for u in S.UNAVAILABLE_TEXTS):
-                            log.info("마감: %s %s", t, f)
-                            continue
                         row = items.nth(i)
                         btn = row.locator(S.SLOT_CLICK)
+                        if any(u in txt for u in S.UNAVAILABLE_TEXTS) or (
+                                S.SLOT_CLICK_REQUIRED and not btn.count()):
+                            log.info("마감: %s %s", t, f)
+                            continue
                         return t, f, (btn.first if btn.count() else row)
         return None
 
@@ -388,11 +395,11 @@ class Bot:
             self.open_date(tg.day)
             if not self.handle_blockers():
                 return "실패", "인증/대기 단계 미처리"
-            slot = self.find_slot(tg.times, tg.facilities)
+            slot = self.find_slot(tg.day, tg.times, tg.facilities)
             if not slot:
                 return "마감", "원하는 시간/코트 없음"
             t, f, el = slot
-            label = f"{tg.label()} {t} {f}"
+            label = f"{tg.label()} {t} {f}".strip()
             log.info("슬롯 선택: %s", label)
             el.click()
             self.settle()
@@ -506,7 +513,7 @@ def run_watch(bot, targets, cfg, already_booked=0):
                 bot.ensure_login()
             bot.open_date(tg.day)
             bot.handle_blockers()
-            if bot.find_slot(tg.times, tg.facilities):
+            if bot.find_slot(tg.day, tg.times, tg.facilities):
                 bot.n.alert(f"빈자리 발견: {tg.label()}")
                 status, detail = bot.try_book(tg)
                 log.info("감시 결과 %s: %s %s", tg.label(), status, detail)
@@ -555,14 +562,16 @@ def cmd_check(bot, clock, cfg, targets):
         if S.DATE_CELL_CLICK and bot.count(bot.date_cell(d)):
             bot.page.locator(bot.date_cell(d)).first.click()
             bot.settle()
-        n = bot.count(S.SLOT_ITEM)
-        rows.append(("시간표 행 SLOT_ITEM", n))
-        items = bot.page.locator(S.SLOT_ITEM)
+        n = bot.count(fill_date(S.SLOT_ITEM, d))
+        rows.append(("시간표 SLOT_ITEM", n))
+        items = bot.page.locator(fill_date(S.SLOT_ITEM, d))
         for i in range(min(n, 8)):
             try:
                 rows.append((f"  행 {i + 1}", " ".join(items.nth(i).inner_text().split())[:70]))
             except Exception:  # noqa: BLE001
                 pass
+        slot = bot.find_slot(d, targets[0].times, targets[0].facilities)
+        rows.append(("목표 시간 예약가능", f"{slot[0]} {slot[1]}".strip() if slot else "없음"))
         rows.append(("인증/대기 감지", bot.find_blocker() or "없음"))
     print("\n[점검 결과]")
     for k, v in rows:

@@ -1,40 +1,44 @@
 """사이트 셀렉터 모음.
 
-⚠ 아래 값은 실제 사이트를 보지 못하고 넣은 '추정값'이다.
-   반드시 `python main.py --inspect`로 실제 화면을 저장한 뒤 맞게 고칠 것.
+✅ 확인됨 (2026-10-31, 로그인 전 화면 기준): 로그인 페이지, 로그인 상태 표시, 달력/시간표 구조
+⚠ 추정값 (로그인 후 화면이라 미확인): 신청서(reservationStep2) 이후 단계
+   → `python main.py --inspect`로 로그인 후 화면을 저장해서 맞출 것.
    (파일 이름을 selectors.py로 하면 파이썬 표준 모듈과 충돌하므로 site_selectors.py)
 
 Playwright 셀렉터 문법: CSS, 'a:has-text("로그아웃")', 'text=예약' 등. 쉼표(,)로 여러 후보 지정 가능.
 """
 
-MAIN_URL = "https://www.auc.or.kr/"
-LOGIN_URL = "https://www.auc.or.kr/member/login"          # TODO: 실제 로그인 페이지 URL
+MAIN_URL = "https://www.auc.or.kr/reservation/main/view"
+LOGIN_URL = "https://www.auc.or.kr/sign/in/base/user?menuLevel=2&menuNo=346"
 SERVER_TIME_URL = "https://www.auc.or.kr/"
 
 # 달력 URL의 yearMonthDay를 그 달 1일로 넣을지(True), 목표 날짜 그대로 넣을지(False)
 CALENDAR_FIRST_OF_MONTH = True
 
 # ── 로그인 ──────────────────────────────────────────────
-LOGIN_ID_INPUT = 'input[name="userId"], input[name="id"], input#userId, input#id'
-LOGGED_IN_MARKER = 'a:has-text("로그아웃"), button:has-text("로그아웃")'
+LOGIN_ID_INPUT = "#loginForm input#id"
+# 로그아웃 상태일 때 상단에 보이는 '로그인' 링크
+LOGGED_OUT_MARKER = "a.header__links__1__login"
+LOGGED_IN_MARKER = 'a:has-text("로그아웃"), a[onclick*="fnLogout"]'
 
 # ── 달력 ────────────────────────────────────────────────
-# {ymd}=2026-11-10, {ymd8}=20261110, {day}=10 으로 치환됨
-DATE_CELL = ('[data-date="{ymd}"], [data-day="{ymd}"], a[onclick*="{ymd}"], '
-             'a[onclick*="{ymd8}"], a[href*="yearMonthDay={ymd}"]')
-DATE_CELL_CLICK = True            # 날짜를 눌러야 시간표가 나오면 True
-NOT_OPEN_TEXTS = ["예약불가", "준비중", "오픈예정", "접수예정", "예약기간"]
+# 달력은 월 단위 표 하나에 날짜별 시간표(ul.yy-list > li)가 함께 들어 있다.
+#   li.possible  > a.possible[onclick="fn_facilityResSelect('1','','2026-11-02','1220','1350')"]  → 예약가능
+#   li.impossible (불) / 환경정비(환) / 대기(대)                                                 → 예약불가
+# 아직 안 열린 날짜는 ul.yy-list가 비어 있고, 그 뒤 날짜는 표에 아예 없다.
+# {ymd}=2026-11-10, {ymd8}=20261110, {day}=10, {dd}=10(두 자리) 로 치환됨
+DATE_CELL = '.calendar_table td:has(> div > span:text-is("{dd}")) ul.yy-list > li'
+DATE_CELL_CLICK = False           # 날짜를 누를 필요 없음 (시간표가 달력 안에 있음)
+NOT_OPEN_TEXTS = []
 
 # ── 시간표(슬롯) ─────────────────────────────────────────
-# 한 행(또는 카드)에 '시간'과 '시설명'이 함께 들어 있는 요소
-SLOT_ITEM = "table tbody tr"
-# 행 안에서 누를 요소 (없으면 행 자체를 클릭)
-SLOT_CLICK = ('a:has-text("신청"), button:has-text("신청"), a:has-text("예약"), '
-              'button:has-text("예약"), input[type="checkbox"], input[type="radio"]')
-UNAVAILABLE_TEXTS = ["마감", "예약완료", "신청불가", "불가", "종료"]
+SLOT_ITEM = DATE_CELL             # 날짜 칸 안의 시간 하나하나
+SLOT_CLICK = "a.possible"
+SLOT_CLICK_REQUIRED = True        # SLOT_CLICK이 없으면 예약불가로 판단
+UNAVAILABLE_TEXTS = ["불", "환", "대"]
 UNAVAILABLE_DIALOG_TEXTS = ["마감", "이미 예약", "초과", "불가"]
 
-# ── 신청서 ──────────────────────────────────────────────
+# ── 신청서 (⚠ 추정값: 로그인 후 reservationStep2 화면 확인 필요) ──
 # config.json applicant의 키 → 입력칸 셀렉터
 APPLICANT_FIELDS = {
     "인원": 'input[name="personCnt"], select[name="personCnt"]',
