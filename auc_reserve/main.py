@@ -6,7 +6,7 @@
   python main.py --login      로그인 대기 (사전 준비)
   python main.py --check      로그인/셀렉터/목표 날짜 점검 (토요일 테스트)
   python main.py --inspect    실제 화면 HTML/요소 저장 (셀렉터 찾기용)
-  python main.py --open       일요일 오픈 대기 → 즉시 예약
+  python main.py --open       목표 날짜 오픈(7일 전 15:00) 대기 → 즉시 예약
   python main.py --watch      빈자리 감시
   python main.py --open --dry-run   브라우저 없이 계산/일정만 출력
 """
