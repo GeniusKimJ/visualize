@@ -380,11 +380,14 @@ class App:
         self.sound = tk.BooleanVar(value=True)
         self.block_images = tk.BooleanVar(value=True)
         self.turbo = tk.BooleanVar(value=True)
+        self.minimize = tk.BooleanVar(value=True)
         ttk.Checkbutton(f, text="알림 소리", variable=self.sound).grid(row=len(rows), column=0, sticky="w")
         ttk.Checkbutton(f, text="이미지 차단 (화면 이동 빠르게)", variable=self.block_images).grid(
             row=len(rows), column=1, sticky="w", padx=8)
         ttk.Checkbutton(f, text="터보 모드 (화면마다 한 번에 처리 — 가장 빠름)", variable=self.turbo).grid(
             row=len(rows), column=2, sticky="w", padx=8)
+        ttk.Checkbutton(f, text="감시·예약 중 크롬 창 최소화 (필요할 때만 다시 띄움)", variable=self.minimize).grid(
+            row=len(rows) + 2, column=0, columnspan=3, sticky="w", pady=(4, 0))
         ttk.Label(f, text="비밀번호는 키보드보안 때문에 저장하지 않습니다. 로그인 창이 뜨면 직접 입력하세요.",
                   foreground="#666", font=("맑은 고딕", 8)).grid(row=len(rows) + 1, column=0, columnspan=2,
                                                               sticky="w", pady=(8, 0))
@@ -444,6 +447,7 @@ class App:
         self.adv["profile_dir"].set(br.get("profile_dir", "chrome_profile"))
         self.adv["cdp_port"].set(str(br.get("cdp_port", 9222)))
         self.adv["chrome_path"].set(br.get("chrome_path", ""))
+        self.minimize.set(bool(br.get("minimize", True)))
 
     def collect(self):
         """화면 값 → config dict. 형식이 틀리면 ValueError."""
@@ -487,7 +491,8 @@ class App:
         c["login_type"] = "member" if self.login_type.get().startswith("공사회원") else "sso"
         br = dict(c.get("browser", {}))
         br.update(mode=br.get("mode", "cdp"), profile_dir=self.adv["profile_dir"].get().strip() or "chrome_profile",
-                  cdp_port=int(self.adv["cdp_port"].get()), chrome_path=self.adv["chrome_path"].get().strip())
+                  cdp_port=int(self.adv["cdp_port"].get()), chrome_path=self.adv["chrome_path"].get().strip(),
+                  minimize=self.minimize.get())
         c["browser"] = br
         c["notify"] = {"telegram_token": self.adv["telegram_token"].get().strip(),
                        "chat_id": self.adv["chat_id"].get().strip(), "sound": self.sound.get()}

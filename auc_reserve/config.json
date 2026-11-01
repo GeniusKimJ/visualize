@@ -63,7 +63,8 @@
     "cdp_port": 9222,
     "chrome_path": "",
     "channel": "chrome",
-    "profile_dir": "chrome_profile"
+    "profile_dir": "chrome_profile",
+    "minimize": true
   },
   "reduction": {
     "type": "",

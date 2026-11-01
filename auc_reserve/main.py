@@ -251,6 +251,9 @@ def launch_chrome(cfg, url="about:blank"):
                            "다른 폴더를 지정하고 그 크롬에서 한 번 로그인해 두세요.")
     args = [path, f"--remote-debugging-port={port}", f"--user-data-dir={prof}",
             "--no-first-run", "--no-default-browser-check", "--start-maximized",
+            # 최소화돼 있어도 타이머/렌더링을 늦추지 않도록 (백그라운드 감시·예약 속도 유지)
+            "--disable-background-timer-throttling", "--disable-renderer-backgrounding",
+            "--disable-backgrounding-occluded-windows",
             *b.get("extra_args", []), url]
     flags = 0
     if sys.platform == "win32":
@@ -348,6 +351,15 @@ class Bot:
         self.mode = "launch"
         self.chrome_proc = None
         self.in_login = False
+        self.minimized = False
+        # 사용자를 불러야 하는 알림(자리 확보, 로그인 필요, 실패 등) 때는 크롬 창을 다시 띄움
+        _alert = notifier.alert
+
+        def alert_and_show(msg):
+            if self.page:
+                self.restore_window()
+            _alert(msg)
+        notifier.alert = alert_and_show
 
     # ── 시작/종료 ──
     def start(self):
@@ -491,6 +503,35 @@ class Bot:
         if self.count(S.LOGGED_OUT_MARKER):
             return False
         return self.count(S.LOGGED_IN_MARKER) > 0
+
+    def _set_window(self, state):
+        """크롬 창 상태 변경: minimized / normal / maximized (실패해도 작업은 계속)."""
+        try:
+            page_s = self.ctx.new_cdp_session(self.page)
+            tid = page_s.send("Target.getTargetInfo")["targetInfo"]["targetId"]
+            s = self.browser.new_browser_cdp_session() if self.mode == "cdp" and self.browser else page_s
+            win = s.send("Browser.getWindowForTarget", {"targetId": tid})["windowId"]
+            s.send("Browser.setWindowBounds", {"windowId": win, "bounds": {"windowState": state}})
+            return True
+        except Exception as e:  # noqa: BLE001
+            log.info("크롬 창 상태 변경 실패(%s): %s", state, str(e).splitlines()[0])
+            return False
+
+    def minimize_window(self):
+        if self.cfg["browser"].get("minimize", True) and not self.minimized:
+            if self._set_window("minimized"):
+                self.minimized = True
+                log.info("크롬 창을 최소화했습니다 (백그라운드에서 계속 진행, 필요할 때 다시 띄움)")
+
+    def restore_window(self):
+        if self.minimized:
+            self._set_window("normal")
+            self._set_window("maximized")
+            self.minimized = False
+        try:
+            self.page.bring_to_front()
+        except Exception:  # noqa: BLE001
+            pass
 
     def logged_in_quiet(self):
         """화면은 건드리지 않고 브라우저 쿠키로 메인 페이지를 조회해 로그인 여부 확인. 실패하면 None."""
@@ -1374,6 +1415,16 @@ def run(argv=None, confirm_fn=None, wait_close_fn=None, alert_fn=None):
             bot.page.set_content("<p id=t>ok</p>")
             assert bot.page.inner_text("#t") == "ok"
             log.info("SELFTEST OK (브라우저 실행 확인, 방식: %s)", bot.mode)
+            bot.minimize_window()
+            try:
+                page_s = bot.ctx.new_cdp_session(bot.page)
+                tid = page_s.send("Target.getTargetInfo")["targetInfo"]["targetId"]
+                s = bot.browser.new_browser_cdp_session() if bot.browser else page_s
+                st = s.send("Browser.getWindowForTarget", {"targetId": tid})["bounds"].get("windowState")
+                log.info("SELFTEST 창 상태(최소화 후): %s / 최소화 중 스크립트: %s", st,
+                         bot.page.evaluate("async () => { await new Promise(r => setTimeout(r, 5)); return 'ok' }"))
+            except Exception as e:  # noqa: BLE001
+                log.info("SELFTEST 창 상태 확인 실패: %s", e)
             skip_wait = True
         elif args.login:
             bot.ensure_login()
@@ -1382,11 +1433,13 @@ def run(argv=None, confirm_fn=None, wait_close_fn=None, alert_fn=None):
         elif args.inspect:
             cmd_inspect(bot, (targets[0].day if targets else datetime.now(KST).date()))
         elif args.watch:
-            bot.ensure_login()
+            if bot.ensure_login():
+                bot.minimize_window()
             run_watch(bot, targets, cfg)
         elif args.open:
             clock.sync_ntp(cfg["ntp_server"])
-            bot.ensure_login(wait_min=15)
+            if bot.ensure_login(wait_min=15):
+                bot.minimize_window()
             opened, fast = True, None
             if clock.now() < open_dt + timedelta(minutes=cfg["open_window_min"]):
                 opened, fast = wait_until_open(bot, clock, cfg, open_dt, targets[0])
