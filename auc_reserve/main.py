@@ -63,6 +63,15 @@ def load_env(path):
             os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
+AUTO_UNTIL = {
+    "court": "시간 선택 → 코트 선택 → [다음]까지 자동 (인원 입력·[예약하기]는 직접)",
+    "people": "인원 입력까지 자동 ([예약하기] → [예]는 직접)",
+    "submit": "[예약하기] → [예]까지 자동 (결제는 직접)",
+}
+USER_TODO = {"court": "인원을 입력하고 [예약하기] → [예]를 눌러주세요",
+             "people": "[예약하기] → [예]를 눌러주세요"}
+
+
 def load_config(path):
     cfg = json.loads(path.read_text(encoding="utf-8"))
     cfg.setdefault("open_mode", "rolling")        # rolling: 이용일 N일 전 오픈 / weekly: 매주 정해진 요일
@@ -84,6 +93,11 @@ def load_config(path):
     cfg.setdefault("login_type", "sso")           # sso: 안양시 통합 로그인 / member: 공사회원 아이디                 # 화면마다 스크립트 한 번으로 처리 (빠름)
     cfg.setdefault("block_images", True)          # 이미지/글꼴 차단으로 화면 로딩 단축
     cfg.setdefault("auto_submit", False)          # true: [예약하기] → [예]까지 자동 (결제는 직접)
+    # 어디까지 자동으로 할지: court = 시간 선택 → [예] → 코트 선택 → [다음]까지 (인원·예약하기는 직접)
+    #                        people = 인원 입력까지 / submit = [예약하기] → [예]까지
+    if cfg.get("auto_until") not in AUTO_UNTIL:
+        cfg["auto_until"] = "submit" if cfg["auto_submit"] else "people"
+    cfg["auto_submit"] = cfg["auto_until"] == "submit"
     cfg.setdefault("retry_on_conflict", 1)        # 먼저 예약돼 실패하면 다시 시도할 횟수
     cfg.setdefault("auto_agree_terms", False)     # true면 결제 화면의 필수 약관 3개 자동 체크 ([결제하기]는 직접)
     cfg.setdefault("max_wait_after_open_min", 30)
@@ -878,6 +892,9 @@ class Bot:
                     self.no_court = True
                     return False
                 self.picked_courts = picked
+            if self.cfg.get("auto_until") == "court" and "reservationStep2_2" in self.page.url:
+                log.info("코트 선택 → [다음]까지 완료 → 인원 입력부터는 사용자")
+                return True
             self.fill_applicant()
             self.check_agreements()
             if self.final_confirm_blocked or self.final_visible():
@@ -1010,6 +1027,13 @@ class Bot:
             return None
         t2 = time.monotonic()
         label += " 코트 " + ",".join(f"{n}번" for n in pick)
+        if self.cfg.get("auto_until") == "court":
+            log.info("터보 소요: 시간선택 %.0fms / 코트 %.0fms (빈 코트 %s → %s) → 인원 입력부터는 사용자",
+                     (t1 - t0) * 1000, (t2 - t1) * 1000, free, pick)
+            self.n.alert(f"{label}, {USER_TODO['court']}")
+            if self.wait_user_complete(self.cfg["final_wait_min"]):
+                return "성공", label
+            return "미완료", label + f" ({self.cfg['final_wait_min']}분 내 완료 미확인)"
         # ③ 인원 입력 (+ [예약하기] → [예])
         submit = bool(self.cfg.get("auto_submit"))
         cnt, reds = form_values(self.cfg, len(pick))
@@ -1021,7 +1045,7 @@ class Bot:
                  (t1 - t0) * 1000, (t2 - t1) * 1000, (t3 - t2) * 1000, free, pick, cnt, reds or "없음")
         if not submit:
             if r == "filled":
-                self.n.alert(f"{label}, [예약하기] → [예]를 눌러주세요")
+                self.n.alert(f"{label}, {USER_TODO['people']}")
                 if self.wait_user_complete(self.cfg["final_wait_min"]):
                     return "성공", label
                 return "미완료", label + f" ({self.cfg['final_wait_min']}분 내 완료 미확인)"
@@ -1103,7 +1127,7 @@ class Bot:
                 self.n.alert(f"{label} 자동 제출 실패: {why.rstrip('.')}. 화면을 확인해주세요")
                 return "실패", f"{label} ({why})"
             if ok:
-                self.n.alert(f"{label}, [예약하기] → [예]를 눌러주세요")
+                self.n.alert(f"{label}, {USER_TODO.get(self.cfg.get('auto_until'), USER_TODO['people'])}")
             else:
                 self.screenshot("flow_stuck")
                 self.n.alert(f"{label}, 신청 화면을 끝까지 자동 진행하지 못했습니다. 직접 진행해주세요")
@@ -1368,9 +1392,9 @@ def dry_run(open_dt, cfg):
     ]
     for when, what in plan:
         out(f"  {fmt_dt(when)}  {what}")
-    end = "[예약하기] → [예]까지 자동" if cfg.get("auto_submit") else "[예약하기] 직전에서 멈추고 알림"
+    end = AUTO_UNTIL[cfg["auto_until"]]
     mode = "터보(화면마다 한 번에 처리)" if cfg.get("turbo", True) else "일반"
-    out(f"  열림 감지 즉시 ({mode}): 시간 선택 → 등록 [예] → 코트 → [다음] → 인원 → {end}")
+    out(f"  열림 감지 즉시 ({mode}): {end}")
 
 
 MENU = [

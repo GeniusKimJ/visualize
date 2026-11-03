@@ -220,7 +220,7 @@ class App:
         self.court_count = tk.StringVar(value="2")
         self.people = tk.StringVar(value="4")
         self.fallback = tk.BooleanVar(value=True)
-        self.auto_submit = tk.BooleanVar(value=True)
+        self.auto_until = tk.StringVar(value=core.AUTO_UNTIL["submit"])
         self.max_per = tk.StringVar(value="1")
         ttk.Label(ct, text="원하는 코트").grid(row=0, column=0, sticky="nw", pady=2)
         grid = ttk.Frame(ct)
@@ -258,8 +258,9 @@ class App:
                                                                               padx=4)
         ttk.Checkbutton(ct, text="지정 코트가 없으면 가까운 빈 코트로", variable=self.fallback).grid(
             row=6, column=0, columnspan=3, sticky="w")
-        ttk.Checkbutton(ct, text="[예약하기] → 환불불가 [예]까지 자동 (끄면 직전에서 멈춤)",
-                        variable=self.auto_submit).grid(row=7, column=0, columnspan=3, sticky="w")
+        ttk.Label(ct, text="자동 범위").grid(row=7, column=0, sticky="w", pady=3)
+        ttk.Combobox(ct, textvariable=self.auto_until, values=list(core.AUTO_UNTIL.values()),
+                     state="readonly", width=52).grid(row=7, column=1, columnspan=2, sticky="w", padx=4)
         self.court_count.trace_add("write", lambda *_: self.update_people_hint())
 
         f.columnconfigure(0, weight=1)
@@ -429,7 +430,8 @@ class App:
         self.red_per_court.set(bool(red.get("per_court", False)))
         self.update_people_hint()
         self.fallback.set(bool(c.get("court_fallback_any", True)))
-        self.auto_submit.set(bool(c.get("auto_submit", True)))
+        until = c.get("auto_until") or ("submit" if c.get("auto_submit", True) else "people")
+        self.auto_until.set(core.AUTO_UNTIL.get(until, core.AUTO_UNTIL["submit"]))
         self.max_per.set(str(c.get("max_per_week", 1)))
         for key in ("open_time", "open_days_before", "open_window_min", "poll_interval_sec",
                     "fast_poll_interval_sec", "burst_interval_sec"):
@@ -477,7 +479,8 @@ class App:
             raise ValueError("감면 인원을 1명 이상 입력하거나 감면 종류를 '감면 없음'으로 두세요.")
         c["reduction"] = {"type": rtype, "count": rcount, "per_court": self.red_per_court.get()}
         c["court_fallback_any"] = self.fallback.get()
-        c["auto_submit"] = self.auto_submit.get()
+        c["auto_until"] = next((k for k, v in core.AUTO_UNTIL.items() if v == self.auto_until.get()), "submit")
+        c["auto_submit"] = c["auto_until"] == "submit"
         c["max_per_week"] = int(self.max_per.get())
         if not TIME_RE.match(self.adv["open_time"].get()[:5]):
             raise ValueError("오픈 시각 형식: 15:00:00")
@@ -579,7 +582,8 @@ class App:
                 messagebox.showinfo("확인", "예약할 날짜가 없습니다. 요일 또는 특정 날짜를 설정하세요.")
                 return
             tg = "\n".join(f"  {t.label()}  {', '.join(t.times)}" for t in self.targets)
-            mode = "[예약하기] → [예]까지 자동" if self.cfg.get("auto_submit") else "[예약하기] 직전에서 멈춤"
+            until = self.cfg.get("auto_until") or ("submit" if self.cfg.get("auto_submit") else "people")
+            mode = core.AUTO_UNTIL.get(until, core.AUTO_UNTIL["submit"])
             if not messagebox.askyesno("오픈 대기 시작",
                                        f"오픈: {core.fmt_dt(self.open_dt)}\n\n{tg}\n\n{mode}\n\n시작할까요?"):
                 return
