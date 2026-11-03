@@ -382,9 +382,7 @@ class Bot:
             self.page = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         self.ctx.set_default_timeout(10_000)
         if self.cfg.get("block_images", True):
-            # 이미지/글꼴은 받지 않아 화면 이동을 빠르게 (해당 요청만 가로챔)
-            self.ctx.route(re.compile(r"\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf)(\?.*)?$", re.I),
-                           lambda r: r.abort())
+            self.block_resources()
         self.page.on("dialog", self._on_dialog)
         self.page.on("popup", self._on_new_page)
 
@@ -430,7 +428,44 @@ class Bot:
             pass
         finally:
             if self.pw:
-                self.pw.stop()
+                pw, self.pw = self.pw, None
+                try:
+                    pw.stop()
+                except Exception:  # noqa: BLE001
+                    pass
+
+    # 이미지/글꼴 차단은 크롬 안에서 처리(CDP Network.setBlockedURLs)한다.
+    # 예전처럼 Playwright route로 가로채면 요청마다 파이썬이 응답해야 해서, 스크립트가 쉬는 동안
+    # (사용자 [예약하기] 대기, '작업 끝' 대기 등) 결제 화면 로딩이 끝나지 않고 계속 돌기만 했다.
+    BLOCK_PATTERNS = [f"*.{ext}{q}" for ext in ("png", "jpg", "jpeg", "gif", "svg", "webp", "ico",
+                                               "woff", "woff2", "ttf", "otf") for q in ("", "?*")]
+
+    def block_resources(self):
+        try:
+            self._net = self.ctx.new_cdp_session(self.page)
+            self._net.send("Network.enable")
+            self._net.send("Network.setBlockedURLs", {"urls": self.BLOCK_PATTERNS})
+        except Exception as e:  # noqa: BLE001
+            self._net = None
+            log.info("이미지 차단 설정 실패(무시하고 계속): %s", str(e).splitlines()[0])
+
+    def unblock_resources(self):
+        """사용자에게 화면을 넘길 때: 이미지 차단 해제 (보안문자·결제 화면이 온전히 보이도록)."""
+        net, self._net = getattr(self, "_net", None), None
+        if net:
+            try:
+                net.send("Network.setBlockedURLs", {"urls": []})
+                net.detach()
+            except Exception:  # noqa: BLE001
+                pass
+
+    def release(self):
+        """작업이 끝나 사용자에게 크롬을 넘김. cdp 모드는 연결을 끊어 크롬이 평소처럼 동작하게 한다
+        (연결이 남아 있으면 확인창·경고창이 파이썬 응답을 기다리며 멈춘다)."""
+        self.unblock_resources()
+        if self.mode == "cdp":
+            self.restore_window()
+            self.stop()
 
     def _on_dialog(self, d):
         msg = d.message
@@ -864,16 +899,23 @@ class Bot:
 
     def wait_user_complete(self, minutes):
         self.phase = "user"
+        self.unblock_resources()
         deadline = time.monotonic() + minutes * 60
         try:
             while time.monotonic() < deadline:
+                if STOP.is_set():
+                    raise InterruptedError("사용자 중지")
                 if any(k in self.last_dialog for k in S.COMPLETE_TEXTS):
                     return True
                 if any(p in self.page.url for p in S.COMPLETE_URL_PARTS):
                     return True
                 if any(k in self.body_text() for k in S.COMPLETE_TEXTS):
                     return True
-                nap(1)
+                # time.sleep 대신 Playwright 대기: 그동안에도 확인창(dialog) 이벤트가 바로 처리됨
+                try:
+                    self.page.wait_for_timeout(300)
+                except Exception:  # noqa: BLE001
+                    nap(0.3)
             return False
         finally:
             self.phase = "auto"
@@ -948,6 +990,7 @@ class Bot:
         log.info("자동 제출 %s (오픈 감지 후 %.0fms): %s", "완료" if sent else "실패",
                  (time.monotonic() - t0) * 1000, why)
         if sent:
+            self.unblock_resources()
             self.n.alert(f"{label} 자리 확보 ({why})! 브라우저에서 [결제하기]를 눌러 결제해주세요")
             return "성공", f"{label} ({why}, 결제 필요)"
         self.screenshot("submit_fail")
@@ -1007,6 +1050,7 @@ class Bot:
                 sent, why = self.auto_submit()
                 log.info("자동 제출 %s (%.0fms): %s", "완료" if sent else "실패", (time.monotonic() - t1) * 1000, why)
                 if sent:
+                    self.unblock_resources()
                     self.n.alert(f"{label} 자리 확보 ({why})! 브라우저에서 [결제하기]를 눌러 결제해주세요")
                     return "성공", f"{label} ({why}, 결제 필요)"
                 self.screenshot("submit_fail")
@@ -1463,6 +1507,7 @@ def run(argv=None, confirm_fn=None, wait_close_fn=None, alert_fn=None):
         notifier.alert("스크립트 오류가 발생했습니다. 브라우저에서 직접 이어서 진행해주세요.")
     finally:
         if bot.ctx and not skip_wait:
+            bot.release()
             msg = "오류가 있었습니다. 브라우저 화면은 그대로 둡니다." if error else "작업 끝."
             try:
                 if wait_close_fn:
