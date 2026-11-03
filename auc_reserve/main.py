@@ -145,7 +145,11 @@ def is_logged_out_html(html):
 
 def is_macro_html(html):
     """사이트의 '매크로 의심자로 확인되었습니다 … 보안 문자를 입력해주세요' 화면인지."""
-    return any(k in html for k in S.MACRO_TEXTS)
+    if any(k in html for k in S.MACRO_TEXTS):
+        return True
+    # 응답 주소가 매크로 화면이거나(앞쪽 <!--url:...--> 표시), 그 화면으로 보내는 짧은 이동 스크립트만 온 경우
+    head = html[:600] if len(html) > 3000 else html
+    return any(k in head for k in S.MACRO_URL_PARTS)
 
 
 def parse_calendar(html, d):
@@ -639,6 +643,8 @@ class Bot:
 
     # ── 우회하지 않는 단계 감지 ──
     def find_blocker(self):
+        if any(k in (self.page.url or "") for k in S.MACRO_URL_PARTS):
+            return "보안문자"
         for name, sel in S.BLOCKER_SELECTORS.items():
             if self.count(sel):
                 return name
@@ -714,13 +720,13 @@ class Bot:
             const c = new AbortController(); const t = setTimeout(() => c.abort(), ms);
             try {
                 const r = await fetch(u, {credentials: 'include', cache: 'no-store', signal: c.signal});
-                return await r.text();
+                return '<!--url:' + r.url + '-->' + await r.text();
             } catch (e) { return ''; } finally { clearTimeout(t); }
         }""", [url, timeout_ms])
         ms = (time.monotonic() - t0) * 1000
         if not html:
             return None, ms
-        if is_macro_html(html):
+        if is_macro_html(html):   # 매크로 화면으로 넘겨졌거나(주소) 그 화면 글자가 있음
             # 매크로 차단 화면: 계속 조회하면 계속 걸리므로 멈추고, 탭에 그 화면을 띄워 사용자가 입력하게 함
             self.unblock_resources()
             self.restore_window()

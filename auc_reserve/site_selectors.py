@@ -150,6 +150,7 @@ BLOCKER_SELECTORS = {
 }
 # 사이트의 매크로 차단 화면: "매크로 의심자로 확인되었습니다. 아래 보안 문자를 입력해주세요."
 MACRO_TEXTS = ["매크로 의심", "보안 문자를 입력", "보안문자를 입력"]
+MACRO_URL_PARTS = ["Mbuster"]          # 매크로 차단 화면 주소: /template/cms/user/aysc/Mbuster_QC.html
 BLOCKER_TEXTS = {
     "보안문자": MACRO_TEXTS,
     "대기열": ["접속 대기", "대기순번", "대기 순번", "접속자가 많아"],
