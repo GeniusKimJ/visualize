@@ -143,6 +143,11 @@ def is_logged_out_html(html):
     return bool(LOGIN_LINK_RE.search(re.sub(r"<!--.*?-->", "", html, flags=re.S)))
 
 
+def is_macro_html(html):
+    """사이트의 '매크로 의심자로 확인되었습니다 … 보안 문자를 입력해주세요' 화면인지."""
+    return any(k in html for k in S.MACRO_TEXTS)
+
+
 def parse_calendar(html, d):
     """달력 HTML에서 d 날짜 상태를 읽는다.
 
@@ -647,15 +652,39 @@ class Bot:
         name = self.find_blocker()
         if not name:
             return True
-        self.n.alert(f"{name} 단계가 나왔습니다. 브라우저에서 직접 처리해주세요.")
+        return self.wait_user_blocker(name, wait_min)
+
+    def wait_user_blocker(self, name, wait_min=10, reload=True):
+        """보안문자·본인인증 등: 이미지 차단을 풀고(보안문자 그림이 보이도록) 사용자가 처리할 때까지 대기.
+        그동안 사이트 조회는 하지 않는다."""
+        log.warning("%s 화면 감지 → 자동 진행을 멈추고 사용자 입력을 기다립니다", name)
+        if getattr(self, "_net", None):
+            self.unblock_resources()
+            if reload:
+                # 차단된 채로 그려진 보안문자 그림을 다시 받아오도록 새로고침
+                try:
+                    self.page.reload(wait_until="domcontentloaded")
+                except Exception:  # noqa: BLE001
+                    pass
+        self.n.alert(f"{name} 화면이 나왔습니다. 브라우저에서 직접 입력/처리해주세요.")
         deadline = time.monotonic() + wait_min * 60
-        while time.monotonic() < deadline:
-            nap(2)
-            if not self.find_blocker():
-                log.info("%s 처리 완료 → 계속 진행", name)
-                return True
-        self.n.alert(f"{name} 단계가 {wait_min}분 동안 처리되지 않았습니다.")
-        return False
+        try:
+            while time.monotonic() < deadline:
+                if STOP.is_set():
+                    raise InterruptedError("사용자 중지")
+                try:
+                    self.page.wait_for_timeout(1000)   # Playwright 대기: 확인창 이벤트도 처리됨
+                except Exception:  # noqa: BLE001
+                    nap(1)
+                if not self.find_blocker():
+                    log.info("%s 처리 완료 → 계속 진행", name)
+                    self.last_access = time.monotonic()
+                    return True
+            self.n.alert(f"{name} 단계가 {wait_min}분 동안 처리되지 않았습니다.")
+            return False
+        finally:
+            if self.cfg.get("block_images", True) and not getattr(self, "_net", None):
+                self.block_resources()
 
     # ── 달력 / 슬롯 ──
     def date_cell(self, d):
@@ -690,6 +719,17 @@ class Bot:
         }""", [url, timeout_ms])
         ms = (time.monotonic() - t0) * 1000
         if not html:
+            return None, ms
+        if is_macro_html(html):
+            # 매크로 차단 화면: 계속 조회하면 계속 걸리므로 멈추고, 탭에 그 화면을 띄워 사용자가 입력하게 함
+            self.unblock_resources()
+            self.restore_window()
+            self.goto(url)
+            if self.find_blocker():
+                self.wait_user_blocker("보안문자", reload=False)
+            elif self.cfg.get("block_images", True):
+                self.block_resources()
+            self.goto_calendar(d)
             return None, ms
         return parse_calendar(html, d), ms
 

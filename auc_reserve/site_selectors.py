@@ -148,6 +148,9 @@ BLOCKER_SELECTORS = {
     "보안문자": 'img[src*="captcha" i], iframe[src*="captcha" i], iframe[src*="recaptcha"], input[name*="captcha" i]',
     "본인인증": 'iframe[src*="nice" i], iframe[src*="kcb" i], iframe[src*="pass" i]',
 }
+# 사이트의 매크로 차단 화면: "매크로 의심자로 확인되었습니다. 아래 보안 문자를 입력해주세요."
+MACRO_TEXTS = ["매크로 의심", "보안 문자를 입력", "보안문자를 입력"]
 BLOCKER_TEXTS = {
+    "보안문자": MACRO_TEXTS,
     "대기열": ["접속 대기", "대기순번", "대기 순번", "접속자가 많아"],
 }
