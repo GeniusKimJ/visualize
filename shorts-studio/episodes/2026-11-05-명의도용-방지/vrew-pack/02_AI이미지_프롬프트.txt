@@ -1,0 +1,37 @@
+[장면 1] 내 명의 휴대폰 개통, 2가지만 알아 두세요.
+  한글: 휴대폰을 들여다보는 50~60대 한국인, 위쪽은 흐린 벽과 하늘, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean person in 50s looking at a smartphone, plain soft blurred wall and sky in the upper part, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 2] 명의도용방지서비스, 엠세이퍼예요.
+  한글: 탁자 위 서류 옆에 놓인 휴대폰, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: smartphone beside papers on a table, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 3] 정부와 이통 3사가 함께 개선했어요.
+  한글: 통신 상담 창구에서 안내받는 60대 한국인 부부, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean couple in their 60s being helped at a service counter, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 4] 1번째, 내 명의 휴대폰 개통 현황 확인.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 5] 2번째, 신규가입·명의변경을 사전 차단.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 6] 쓰던 번호 외의 새 가입을 막는 방식이에요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 7] PC는 msafer.or.kr에서 해요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 8] 신청은 본인이 직접 하는 방식이에요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 9] 확인 1가지, 차단 1가지, 총 2가지예요.
+  숫자 카드 number-1.png 사용 (AI 이미지 없음)
+
+[장면 10] 내 명의 개통 현황, 꼭 확인해 보세요.
+  한글: 휴대폰을 확인하며 고개를 끄덕이는 60대 한국인 여성, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: korean woman in her 60s nodding while checking her phone, warm natural light, realistic photo, vertical 9:16, no text in image
+
+[장면 11] 서비스 내용은 공식 누리집에서 확인하세요.
+  한글: 밝은 책상 위 노트북과 메모지, 따뜻한 자연광, 사실적인 사진 스타일, 세로 9:16 구도, 화면에 글자 없음
+  영문: laptop and notepad on a bright desk, warm natural light, realistic photo, vertical 9:16, no text in image
